@@ -6,6 +6,53 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "dbus-next>=0.2.3",
+    "jsonargparse>=4.37.0",
     "paho-mqtt>=2.1.0",
     "sdbus>=0.13.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "types-pyyaml>=6.0.12.20241230",
+    "taskipy>=1.14.1",
+    "ruff>=0.11.2",
+    "pyright>=1.1.396",
+]
+
+[tool.taskipy.tasks]
+lint-ruff = "ruff check"
+lint-pyright = "pyright"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
+typeCheckingMode = "basic"
+
+# This does not work with dynamic dbus proxies
+reportAttributeAccessIssue = false
+
+[tool.ruff.lint]
+extend-select = [
+
+    # pycodestyle Error, Warnings
+    "E",
+    "W",
+
+    # isort
+    "I",
+
+    # pep8-naming
+    "N",
+
+    # pyupgrade
+    "UP"
+]
+ignore = [
+    # line-too-long
+    "E501"
+]
+
+[tool.ruff.lint.isort]
+lines-between-types = 1
