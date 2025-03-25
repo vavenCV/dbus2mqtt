@@ -1,20 +1,24 @@
-subscriptions:
+# mqtt:
+#   host:
+#   port:
 
-  - bus_name: org.mpris.MediaPlayer2.*
-    path: /org/mpris/MediaPlayer2
-    interfaces:
-      - interface: org.freedesktop.DBus.Properties
-        signals:
-          - signal: PropertiesChanged
-      - interface: org.mpris.MediaPlayer2
-        methods:
-          - method: Quit
-      - interface: org.mpris.MediaPlayer2.Player
-        methods:
-          - method: Pause
-          - method: Play
-          - method: OpenUri
-          - method: Stop
-        properties:
-          - property: Metadata
-          - property: Volume
+dbus:
+  subscriptions:
+    - bus_name: org.mpris.MediaPlayer2.*
+      path: /org/mpris/MediaPlayer2
+      interfaces:
+        - interface: org.freedesktop.DBus.Properties
+          signals:
+            - signal: PropertiesChanged
+        - interface: org.mpris.MediaPlayer2
+          methods:
+            - method: Quit
+        - interface: org.mpris.MediaPlayer2.Player
+          methods:
+            - method: Pause
+            - method: Play
+            - method: OpenUri
+            - method: Stop
+          properties:
+            - property: Metadata
+            - property: Volume

@@ -1,8 +1,6 @@
-import asyncio
-import logging
 
-from dataclasses import dataclass, field
-from typing import cast
+from dbus2mqtt.config import DbusConfig, SubscriptionConfig, InterfaceConfig
+
 import json
 
 import re
@@ -11,39 +9,11 @@ import dbus_next.introspection as dbus_introspection
 import dbus_next.signature as dbus_signature
 
 import fnmatch
-import jsonargparse
+import logging
+
 
 # from dbus_next.aio.proxy_object import ProxyObject as DbusProxyObject
 # from dbus_next.introspection import Interface as DbusInterface
-
-@dataclass
-class Signal:
-    signal: str
-
-@dataclass
-class Method:
-    method: str
-
-@dataclass
-class Property:
-    property: str
-
-@dataclass
-class Interface:
-    interface: str
-    signals: list[Signal] = field(default_factory=list)
-    methods: list[Method] = field(default_factory=list)
-    properties: list[Property] = field(default_factory=list)
-
-@dataclass
-class Subscription:
-    bus_name: str
-    path: str
-    interfaces: list[Interface] = field(default_factory=list)
-
-@dataclass
-class Config:
-    subscriptions: list[Subscription]
 
 # class BusSubscriptionState:
 #     bus_name: str
@@ -51,11 +21,12 @@ class Config:
 #     dbus_aio.proxy_object.ProxyObject
 
 
+
 logger = logging.getLogger(__name__)
 
-class MprisToMqtt:
+class DbusClient:
 
-    def __init__(self, config: Config, bus: dbus_aio.message_bus.MessageBus):
+    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus):
         self.config = config
         self.bus = bus
         # self.proxies: dict[str, BusSubscriptionState] = {}
@@ -75,7 +46,7 @@ class MprisToMqtt:
             properties = obj.get_interface('org.freedesktop.DBus')
 
             proxy = obj.get_interface('org.freedesktop.DBus')
-            interface: Interface = proxy.introspection
+            interface: dbus_introspection.Interface = proxy.introspection
 
             print([m.name for m in interface.methods])
             print([s.name for s in interface.signals])
@@ -97,7 +68,7 @@ class MprisToMqtt:
     # async def setup(self):
 
     #     self.bus.introspect.
-    def get_subscription(self, bus_name: str, path: str) -> Subscription | None:
+    def get_subscription(self, bus_name: str, path: str) -> SubscriptionConfig | None:
         for subscription in self.config.subscriptions:
             if fnmatch.fnmatchcase(bus_name, subscription.bus_name) and fnmatch.fnmatchcase(path, subscription.path):
                 return subscription
@@ -107,7 +78,7 @@ class MprisToMqtt:
     def camel_to_snake(name):
         return re.sub(r'([a-z])([A-Z])', r'\1_\2', name).lower()
 
-    async def subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: Interface):
+    async def subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: InterfaceConfig):
         obj = self.bus.get_proxy_object(bus_name, path, introspection)
         obj_interface = obj.get_interface(interface.name)
 
@@ -216,61 +187,3 @@ class MprisToMqtt:
 
     def on_signal_5(self, arg1, arg2, arg3, arg4, arg5):
         self.on_signal(arg1, arg2, arg3, arg4, arg5)
-
-async def main(config: Config):
-
-    bus = dbus_aio.message_bus.MessageBus()
-    mpris_to_mqtt = MprisToMqtt(config, bus)
-
-    await mpris_to_mqtt.connect()
-
-    # introspection = await bus.introspect('org.freedesktop.DBus', '/org/freedesktop/DBus')
-
-    # obj = bus.get_proxy_object('org.freedesktop.DBus', '/org/freedesktop/DBus', introspection)
-    # # player = obj.get_interface('org.mpris.MediaPlayer2.Player')
-    # properties = obj.get_interface('org.freedesktop.DBus.Properties')
-
-    # await mprisToMqtt.connect_player('org.mpris.MediaPlayer2.vlc', '/org/mpris/MediaPlayer2')
-
-    # obj = bus.get_proxy_object('org.mpris.MediaPlayer2.vlc', '/org/mpris/MediaPlayer2', introspection)
-    # print(f"obj: bus_name={obj.bus_name}, path={obj.path}, {[d.name for d in obj.introspection.interfaces]}")
-    # player = obj.get_interface('org.mpris.MediaPlayer2.Player')
-    # properties = obj.get_interface('org.freedesktop.DBus.Properties')
-
-    # # call methods on the interface (this causes the media player to play)
-    # await player.call_play()
-
-    # volume = await player.get_volume()
-    # print(f'current volume: {volume}, setting to 0.5')
-
-    # await player.set_volume(0.5)
-
-    # listen to signals
-    # def on_properties_changed(interface_name, changed_properties, invalidated_properties):
-    #     for changed, variant in changed_properties.items():
-    #         print(f'property changed: {changed} - {variant.value}')
-
-    # properties.on_properties_changed(on_properties_changed)
-
-    await loop.create_future()
-
-if __name__ == "__main__":
-
-    parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"])
-
-    parser.add_argument("--verbose", "-v", nargs="?", const=True, help="Enable verbose logging")
-    parser.add_class_arguments(Config)
-
-    cfg = parser.parse_args()
-
-    config: Config = cast(Config, parser.instantiate_classes(cfg))
-
-    logging.basicConfig(level=logging.INFO)
-    if cfg.verbose:
-        logger.setLevel(level=logging.DEBUG)
-
-    logger.debug(f"config: {config}")
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main(config))
