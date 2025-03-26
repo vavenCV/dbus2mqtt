@@ -1,5 +1,7 @@
 from dataclasses import dataclass, field
+
 from pydantic import SecretStr
+
 
 @dataclass
 class SignalConfig:
