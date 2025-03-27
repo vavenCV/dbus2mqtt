@@ -1,5 +1,6 @@
 
 import asyncio
+import json
 import logging
 
 from typing import Any
@@ -39,8 +40,9 @@ class MqttClient:
         )
 
     def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, msg: dict[str, Any]):
-        logger.info(f"msg: {msg}")
-        payload = f"{msg}"
+        payload = json.dumps(msg)
+        logger.info(f"msg: {payload}")
+        # payload = f"{msg['interface_name']}"
         self.client.publish(topic=f"dbus2mqtt/{bus_name}/{interface}/{signal}", payload=payload)
 
     async def run(self):

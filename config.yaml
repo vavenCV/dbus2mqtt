@@ -10,9 +10,16 @@ dbus:
         - interface: org.freedesktop.DBus.Properties
           signals:
             - signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+              payload_template: |
+                interface_name: {{ args[0] }}
+                changed_properties:
+                  {{ args[1] | to_nice_yaml | indent(2) }}
+                invalidated_properties: {{ args[2] }}
         - interface: org.mpris.MediaPlayer2
           methods:
             - method: Quit
+            
         - interface: org.mpris.MediaPlayer2.Player
           methods:
             - method: Pause

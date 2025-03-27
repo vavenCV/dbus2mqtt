@@ -60,9 +60,10 @@ def main():
 
     config: Config = cast(Config, parser.instantiate_classes(cfg))
 
-    logging.basicConfig(level=logging.INFO)
     if cfg.verbose:
-        logger.setLevel(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     logger.debug(f"config: {config}")
 

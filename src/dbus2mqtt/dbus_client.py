@@ -1,4 +1,4 @@
-
+import asyncio
 import fnmatch
 import json
 import logging
@@ -8,7 +8,12 @@ import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
 import dbus_next.signature as dbus_signature
 
-from dbus2mqtt.config import DbusConfig, InterfaceConfig, SubscriptionConfig
+from dbus2mqtt.config import (
+    DbusConfig,
+    InterfaceConfig,
+    SignalConfig,
+    SubscriptionConfig,
+)
 from dbus2mqtt.handler import DbusSignalHandler
 
 # from dbus_next.aio.proxy_object import ProxyObject as DbusProxyObject
@@ -16,60 +21,47 @@ from dbus2mqtt.handler import DbusSignalHandler
 
 logger = logging.getLogger(__name__)
 
-class InterfaceSubscription:
-
-    interface: dbus_introspection.Interface
-    proxy_interface: dbus_aio.proxy_object.ProxyInterface
-    signal_handler: DbusSignalHandler
-
-    @staticmethod
-    def variant_serializer(obj):
-        if isinstance(obj, dbus_signature.Variant):
-            return obj.value
-        return obj
-
-    @staticmethod
-    def unwrap_dbus_object(o):
-        # an easy way to get rid of dbus_next.signature.Variant types
-        res = json.dumps(o, default=InterfaceSubscription.variant_serializer)
-        json_obj = json.loads(res)
-        return json_obj
-
-    def on_signal(self, *args):
-
-        signal_name = "PropertiesChanged"
-
-        # logger.info(f"name={signal.name}, signature={signal.signature}, args={signal.to_xml().set}")
-        msg = {
-            "interface_name": self.unwrap_dbus_object(args[0]),
-            "changed_properties": self.unwrap_dbus_object(args[1]),
-            "invalidated_properties": self.unwrap_dbus_object(args[2])
-        }
-
-        logger.debug(f"on_signal: {self.proxy_interface.bus_name}, {self.proxy_interface.path}, {self.interface.name}, {msg}")
-        self.signal_handler.on_dbus_signal(self.proxy_interface.bus_name, self.proxy_interface.path, self.interface.name, signal_name, msg)
-
-# INFO:dbus2mqtt.dbus_client:subscribed signal: bus_name=org.mpris.MediaPlayer2.vlc, path=/org/mpris/MediaPlayer2, interface=org.freedesktop.DBus.Properties, signal=PropertiesChanged
-
-    def on_signal_1(self, arg1):
-        self.on_signal(arg1)
-
-    def on_signal_2(self, arg1, arg2):
-        self.on_signal(arg1, arg2)
-
-    def on_signal_3(self, arg1, arg2, arg3):
-        self.on_signal(arg1, arg2, arg3)
-
-    def on_signal_4(self, arg1, arg2, arg3, arg4):
-        self.on_signal(arg1, arg2, arg3, arg4)
-
-    def on_signal_5(self, arg1, arg2, arg3, arg4, arg5):
-        self.on_signal(arg1, arg2, arg3, arg4, arg5)
-
 class BusNameSubscriptions:
     bus_name: str
+    signal_handler: DbusSignalHandler
     path_objects: dict[str, dbus_aio.proxy_object.ProxyObject] = {}
-    interfaces: dict[str, InterfaceSubscription] = {}
+
+def variant_serializer(obj):
+    if isinstance(obj, dbus_signature.Variant):
+        return obj.value
+    return obj
+
+def unwrap_dbus_object(o):
+    # an easy way to get rid of dbus_next.signature.Variant types
+    res = json.dumps(o, default=variant_serializer)
+    json_obj = json.loads(res)
+    return json_obj
+
+async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path, interface_name, signal: SignalConfig, *args):
+
+    bus_name = bus_name_subscriptions.bus_name
+    proxy_object = bus_name_subscriptions.path_objects[path]
+    signal_handler = bus_name_subscriptions.signal_handler
+
+    unwrapped_args = [unwrap_dbus_object(o) for o in args]
+
+    matches_filter = signal.matches_filter(*args)
+    if matches_filter:
+
+        payload = signal.render_payload_template(*unwrapped_args)
+        logger.info(f"name={signal.signal}, msg=\n{payload}")
+
+        properties = proxy_object.get_interface("org.freedesktop.DBus.Properties")
+
+        msg = {}
+        msg["mediaplayer2_properties"] = unwrap_dbus_object(await properties.call_get_all("org.mpris.MediaPlayer2"))
+        msg["mediaplayer2_player_properties"] = unwrap_dbus_object(await properties.call_get_all("org.mpris.MediaPlayer2.Player"))
+        msg.update(payload)
+
+        logger.debug(f"on_signal: {bus_name}, {path}, {interface_name}, {msg}")
+        signal_handler.on_dbus_signal(bus_name, path, interface_name, signal.signal, msg)
+
+# INFO:dbus2mqtt.dbus_client:subscribed signal: bus_name=org.mpris.MediaPlayer2.vlc, path=/org/mpris/MediaPlayer2, interface=org.freedesktop.DBus.Properties, signal=PropertiesChanged
 
 
 class DbusClient:
@@ -105,12 +97,13 @@ class DbusClient:
             # for signal in interface.signals:
             properties.on_name_owner_changed(self.dbus_name_owner_changed_callback)
 
-    def get_interface_subscription(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface):
+    def get_proxy_object_subscription(self, bus_name: str, path: str, introspection: dbus_introspection.Node):
 
         bus_name_subscriptions = self.subscriptions.get(bus_name)
         if not bus_name_subscriptions:
             bus_name_subscriptions = BusNameSubscriptions()
             bus_name_subscriptions.bus_name = bus_name
+            bus_name_subscriptions.signal_handler = self.signal_handler
             self.subscriptions[bus_name] = bus_name_subscriptions
 
         proxy_object = bus_name_subscriptions.path_objects.get(path)
@@ -118,15 +111,7 @@ class DbusClient:
             proxy_object = self.bus.get_proxy_object(bus_name, path, introspection)
             bus_name_subscriptions.path_objects[path] = proxy_object
 
-        interface_subscription = bus_name_subscriptions.interfaces.get(interface.name)
-        if not interface_subscription:
-            interface_subscription = InterfaceSubscription()
-            interface_subscription.interface = interface
-            interface_subscription.proxy_interface = proxy_object.get_interface(interface.name)
-            interface_subscription.signal_handler = self.signal_handler
-            bus_name_subscriptions.interfaces[interface.name] = interface_subscription
-
-        return interface_subscription
+        return proxy_object, bus_name_subscriptions
 
     def is_bus_name_configured(self, bus_name: str) -> bool:
 
@@ -148,26 +133,29 @@ class DbusClient:
 
     async def subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: InterfaceConfig):
 
-        interface_subscription = self.get_interface_subscription(bus_name, path, introspection, interface)
-        obj_interface = interface_subscription.proxy_interface
+        proxy_object, bus_name_subscriptions = self.get_proxy_object_subscription(bus_name, path, introspection)
+        obj_interface = proxy_object.get_interface(interface.name)
 
-        interface_signals: dict[str, dbus_introspection.Signal]
-        # start listening for events
-
-        logger.debug(f"subscribe: bus_name={bus_name}, path={path}, interface={interface.name}")
         interface_signals = dict((s.name, s) for s in interface.signals)
 
-        logger.debug(f"  signals: {interface_signals.keys}")
+        logger.debug(f"subscribe: bus_name={bus_name}, path={path}, interface={interface.name}, proxy_interface: signals={list(interface_signals.keys())}")
 
         for signal in si.signals:
             interface_signal = interface_signals.get(signal.signal)
             if interface_signal:
-                logger.info(f"subscribed signal: bus_name={bus_name}, path={path}, interface={interface.name}, signal={signal.signal}")
+                logger.info(f"subscribed on_signal: bus_name={bus_name}, path={path}, interface={interface.name}, signal={signal.signal}")
 
-                # TODO, should be dynamic
-                obj_interface.on_properties_changed(interface_subscription.on_signal_3)
-                # signal_method_name = "on_" + self.camel_to_snake(signal.signal)
-                # obj_interface.__setattr__(signal_method_name, self.on_signal_3)
+                on_signal_method_name = "on_" + self.camel_to_snake(signal.signal)
+                obj_interface.__getattribute__(on_signal_method_name)(
+                    lambda a, b, c:
+                        asyncio.gather(
+                            on_signal(bus_name_subscriptions, path, interface.name, signal, a, b, c)
+                        )
+                )
+
+            else:
+                logger.warning(f"Invalid signal: bus_name={bus_name}, path={path}, interface={interface.name}, signal={signal.signal}")
+
 
     async def process_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface):
 
