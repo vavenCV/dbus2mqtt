@@ -1,12 +1,9 @@
 import asyncio
 import fnmatch
-import json
 import logging
-import re
 
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
-import dbus_next.signature as dbus_signature
 
 from dbus2mqtt.config import (
     DbusConfig,
@@ -14,10 +11,8 @@ from dbus2mqtt.config import (
     SignalConfig,
     SubscriptionConfig,
 )
+from dbus2mqtt.dbus_utlil import camel_to_snake, unwrap_dbus_object
 from dbus2mqtt.handler import DbusSignalHandler
-
-# from dbus_next.aio.proxy_object import ProxyObject as DbusProxyObject
-# from dbus_next.introspection import Interface as DbusInterface
 
 logger = logging.getLogger(__name__)
 
@@ -25,17 +20,6 @@ class BusNameSubscriptions:
     bus_name: str
     signal_handler: DbusSignalHandler
     path_objects: dict[str, dbus_aio.proxy_object.ProxyObject] = {}
-
-def variant_serializer(obj):
-    if isinstance(obj, dbus_signature.Variant):
-        return obj.value
-    return obj
-
-def unwrap_dbus_object(o):
-    # an easy way to get rid of dbus_next.signature.Variant types
-    res = json.dumps(o, default=variant_serializer)
-    json_obj = json.loads(res)
-    return json_obj
 
 async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, interface_name: str, signal: SignalConfig, *args):
 
@@ -50,7 +34,9 @@ async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, int
 
         async def async_dbus_call_fn(interface: str, method: str, bus_name: str):
             obj_interface = proxy_object.get_interface(interface)
-            res = await obj_interface.call_get_all(bus_name)
+
+            call_method_name = "call_" + camel_to_snake(method)
+            res = await obj_interface.__getattribute__(call_method_name)(bus_name)
             return unwrap_dbus_object(res)
 
         template_context = {
@@ -62,7 +48,7 @@ async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, int
 
         payload = await signal.render_payload_template(unwrapped_args, context=template_context)
         mqtt_topic = await signal.render_mqtt_topic(context=template_context)
-        
+
         logger.info(f"name={signal.signal}, msg=\n{payload}")
 
         logger.debug(f"on_signal: {bus_name}, {path}, {interface_name}, {payload}")
@@ -80,7 +66,6 @@ class DbusClient:
     async def connect(self):
 
         if not self.bus.connected:
-            # self.proxies.clear()
             await self.bus.connect()
 
             if self.bus.connected:
@@ -126,11 +111,6 @@ class DbusClient:
                 res.append(subscription)
         return res
 
-
-    @staticmethod
-    def camel_to_snake(name):
-        return re.sub(r'([a-z])([A-Z])', r'\1_\2', name).lower()
-
     async def subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: InterfaceConfig):
 
         proxy_object, bus_name_subscriptions = self.get_proxy_object_subscription(bus_name, path, introspection)
@@ -144,9 +124,9 @@ class DbusClient:
             interface_signal = interface_signals.get(signal.signal)
             if interface_signal:
 
-                on_signal_method_name = "on_" + self.camel_to_snake(signal.signal)
+                on_signal_method_name = "on_" + camel_to_snake(signal.signal)
                 obj_interface.__getattribute__(on_signal_method_name)(
-                    lambda a, b, c: 
+                    lambda a, b, c:
                         asyncio.gather(
                             on_signal(bus_name_subscriptions, path, interface.name, signal, a, b, c),
                         )
@@ -204,15 +184,8 @@ class DbusClient:
         logger.debug(f'NameOwnerChanged: name=q{name}, old_owner={old_owner}, new_owner={new_owner}')
 
         if new_owner and not old_owner:
-            logger.debug(f'NameOwnerChanged-ADDED: name={name}')
+            logger.debug(f'NameOwnerChanged.new: name={name}')
             await self.handle_bus_name_added(name)
         if old_owner and not new_owner:
-            logger.debug(f'NameOwnerChanged-REMOVED: name={name}')
+            logger.debug(f'NameOwnerChanged.old: name={name}')
             await self.handle_bus_name_removed(name)
-
-    def _unwrap(self, obj):
-        if isinstance(obj, dbus_signature.Variant):
-            logger.warn("XXXXXX")
-            return obj.value
-        return obj
-
