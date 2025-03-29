@@ -39,11 +39,10 @@ class MqttClient:
             port=self.config.port
         )
 
-    def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, msg: dict[str, Any]):
+    def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, topic, msg: dict[str, Any]):
         payload = json.dumps(msg)
         logger.info(f"msg: {payload}")
-        # payload = f"{msg['interface_name']}"
-        self.client.publish(topic=f"dbus2mqtt/{bus_name}/{interface}/{signal}", payload=payload)
+        self.client.publish(topic=topic, payload=payload)
 
     async def run(self):
         """Runs the MQTT loop in a non-blocking way with asyncio."""

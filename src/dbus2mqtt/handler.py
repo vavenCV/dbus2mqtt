@@ -4,8 +4,8 @@ from typing import Any
 
 class DbusSignalHandler:
 
-    handler: Callable[[str, str, str, str, dict[str, Any]], None]
+    handler: Callable[[str, str, str, str, str, dict[str, Any]], None]
 
-    def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, msg: dict[str, Any]):
+    def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, topic: str, msg: dict[str, Any]):
         if self.handler:
-            self.handler(bus_name, path, interface, signal, msg)
+            self.handler(bus_name, path, interface, signal, topic, msg)

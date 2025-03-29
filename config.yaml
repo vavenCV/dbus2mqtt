@@ -16,6 +16,13 @@ dbus:
                 changed_properties:
                   {{ args[1] | to_nice_yaml | indent(2) }}
                 invalidated_properties: {{ args[2] }}
+                properties:
+                  {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2') }}
+                player_properties:
+                  {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
+              # mqtt_topic: dbus2mqtt/{{ bus_name }}/state
+              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+
         - interface: org.mpris.MediaPlayer2
           methods:
             - method: Quit

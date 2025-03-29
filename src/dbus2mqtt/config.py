@@ -16,7 +16,8 @@ env = Environment(
     # autoescape=select_autoescape()
     # trim_blocks=True,
     # lstrip_blocks=True,
-    undefined=StrictUndefined
+    undefined=StrictUndefined,
+    enable_async=True
 )
 
 @dataclass
@@ -24,21 +25,26 @@ class SignalConfig:
     signal: str
     filter: str
     payload_template: str | dict[str, Any]
+    mqtt_topic: str
 
-    def matches_filter(self, *args) -> bool:
-        res = env.from_string(self.filter).render(args=args)
+    async def matches_filter(self, *args) -> bool:
+        res = await env.from_string(self.filter).render_async(args=args)
         return res == "True"
 
-    def render_payload_template(self, *args) -> Any:
+    async def render_payload_template(self, args, context: dict[str, Any]) -> Any:
         # print(f"a: {self.payload_template}, args={args}")
         template = self.payload_template
         dict_template = isinstance(template, dict)
         if dict_template:
             template = yaml.safe_dump(template)
 
-        rendered = env.from_string(template).render(args=args)
+        rendered = await env.from_string(template).render_async(args=args, **context)
         rendered = yaml.safe_load(rendered)
 
+        return rendered
+
+    async def render_mqtt_topic(self, context: dict[str, Any]) -> Any:
+        rendered = await env.from_string(self.mqtt_topic).render_async(**context)
         return rendered
 
 @dataclass
