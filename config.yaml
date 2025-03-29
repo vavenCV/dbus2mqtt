@@ -6,9 +6,17 @@ dbus:
   subscriptions:
     - bus_name: org.mpris.MediaPlayer2.*
       path: /org/mpris/MediaPlayer2
+      # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
-          signals:
+          signal_handlers:
+              # TODO: allow for trigger by timer
+              # Position property updates do not trigger a PropertiesChange event
+            - signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+              payload_template: |
+                {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
+              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
             - signal: PropertiesChanged
               filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
               payload_template: |
@@ -21,7 +29,7 @@ dbus:
                 player_properties:
                   {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
               # mqtt_topic: dbus2mqtt/{{ bus_name }}/state
-              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
 
         - interface: org.mpris.MediaPlayer2
           methods:

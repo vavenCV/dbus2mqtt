@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 
 from typing import cast
 
@@ -10,7 +11,7 @@ from dotenv import load_dotenv
 
 from dbus2mqtt.config import Config, DbusConfig, MqttConfig
 from dbus2mqtt.dbus_client import DbusClient
-from dbus2mqtt.handler import DbusSignalHandler
+from dbus2mqtt.dbus_subscription import DbusSignalHandler
 from dbus2mqtt.mqtt_client import MqttClient
 
 logger = logging.getLogger(__name__)
@@ -30,11 +31,9 @@ async def setup_mqtt(config: MqttConfig, dbus_signal_handler: DbusSignalHandler)
     mqtt_client = MqttClient(config, dbus_signal_handler)
     mqtt_client.connect()
 
+    # run mqtt client forever
     loop = asyncio.get_running_loop()
     loop.create_task(asyncio.to_thread(mqtt_client.client.loop_forever))
-
-    # mqtt_client.run()
-    # logger.info("Connected to MQTT and listening for messages.")
 
 async def run(loop, config: Config):
 
@@ -44,6 +43,7 @@ async def run(loop, config: Config):
         setup_dbus(config.dbus, dbus_signal_handler),
         setup_mqtt(config.mqtt, dbus_signal_handler)
     )
+
 
 def main():
 
@@ -61,9 +61,9 @@ def main():
     config: Config = cast(Config, parser.instantiate_classes(cfg))
 
     if cfg.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     logger.debug(f"config: {config}")
 

@@ -1,5 +1,4 @@
 import asyncio
-import fnmatch
 import logging
 
 import dbus_next.aio as dbus_aio
@@ -8,51 +7,12 @@ import dbus_next.introspection as dbus_introspection
 from dbus2mqtt.config import (
     DbusConfig,
     InterfaceConfig,
-    SignalConfig,
-    SubscriptionConfig,
 )
-from dbus2mqtt.dbus_utlil import camel_to_snake, unwrap_dbus_object
-from dbus2mqtt.handler import DbusSignalHandler
+from dbus2mqtt.dbus_signal_processor import on_signal
+from dbus2mqtt.dbus_subscription import BusNameSubscriptions, DbusSignalHandler
+from dbus2mqtt.dbus_util import camel_to_snake
 
 logger = logging.getLogger(__name__)
-
-class BusNameSubscriptions:
-    bus_name: str
-    signal_handler: DbusSignalHandler
-    path_objects: dict[str, dbus_aio.proxy_object.ProxyObject] = {}
-
-async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, interface_name: str, signal: SignalConfig, *args):
-
-    bus_name = bus_name_subscriptions.bus_name
-    proxy_object = bus_name_subscriptions.path_objects[path]
-    signal_handler = bus_name_subscriptions.signal_handler
-
-    unwrapped_args = [unwrap_dbus_object(o) for o in args]
-
-    matches_filter = await signal.matches_filter(*args)
-    if matches_filter:
-
-        async def async_dbus_call_fn(interface: str, method: str, bus_name: str):
-            obj_interface = proxy_object.get_interface(interface)
-
-            call_method_name = "call_" + camel_to_snake(method)
-            res = await obj_interface.__getattribute__(call_method_name)(bus_name)
-            return unwrap_dbus_object(res)
-
-        template_context = {
-            "bus_name": bus_name,
-            "path": path,
-            "interface": interface_name,
-            "dbus_call": async_dbus_call_fn
-        }
-
-        payload = await signal.render_payload_template(unwrapped_args, context=template_context)
-        mqtt_topic = await signal.render_mqtt_topic(context=template_context)
-
-        logger.info(f"name={signal.signal}, msg=\n{payload}")
-
-        logger.debug(f"on_signal: {bus_name}, {path}, {interface_name}, {payload}")
-        signal_handler.on_dbus_signal(bus_name, path, interface_name, signal.signal, mqtt_topic, payload)
 
 
 class DbusClient:
@@ -75,18 +35,22 @@ class DbusClient:
 
             introspection = await self.bus.introspect('org.freedesktop.DBus', '/org/freedesktop/DBus')
             obj = self.bus.get_proxy_object('org.freedesktop.DBus', '/org/freedesktop/DBus', introspection)
-            properties = obj.get_interface('org.freedesktop.DBus')
+            dbus_interface = obj.get_interface('org.freedesktop.DBus')
 
             # subscribe to NameOwnerChanged which allows us to detect new bus_names
-            properties.on_name_owner_changed(self.dbus_name_owner_changed_callback)
+            dbus_interface.on_name_owner_changed(self.dbus_name_owner_changed_callback)
+
+            # subscribe to existing registed bus_names we are interested in
+            connected_bus_names = await dbus_interface.call_list_names()
+            # logger.debug(f"connect: connected_bus_names={connected_bus_names}")
+            for bus_name in connected_bus_names:
+                await self.handle_bus_name_added(bus_name)
 
     def get_proxy_object_subscription(self, bus_name: str, path: str, introspection: dbus_introspection.Node):
 
         bus_name_subscriptions = self.subscriptions.get(bus_name)
         if not bus_name_subscriptions:
-            bus_name_subscriptions = BusNameSubscriptions()
-            bus_name_subscriptions.bus_name = bus_name
-            bus_name_subscriptions.signal_handler = self.signal_handler
+            bus_name_subscriptions = BusNameSubscriptions(bus_name, self.signal_handler)
             self.subscriptions[bus_name] = bus_name_subscriptions
 
         proxy_object = bus_name_subscriptions.path_objects.get(path)
@@ -95,21 +59,6 @@ class DbusClient:
             bus_name_subscriptions.path_objects[path] = proxy_object
 
         return proxy_object, bus_name_subscriptions
-
-    def is_bus_name_configured(self, bus_name: str) -> bool:
-
-        for subscription in self.config.subscriptions:
-            if fnmatch.fnmatchcase(bus_name, subscription.bus_name):
-                return True
-
-        return False
-
-    def get_subscription_configs(self, bus_name: str, path: str) -> list[SubscriptionConfig]:
-        res: list[SubscriptionConfig] = []
-        for subscription in self.config.subscriptions:
-            if fnmatch.fnmatchcase(bus_name, subscription.bus_name) and fnmatch.fnmatchcase(path, subscription.path):
-                res.append(subscription)
-        return res
 
     async def subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: InterfaceConfig):
 
@@ -120,27 +69,27 @@ class DbusClient:
 
         logger.debug(f"subscribe: bus_name={bus_name}, path={path}, interface={interface.name}, proxy_interface: signals={list(interface_signals.keys())}")
 
-        for signal in si.signals:
-            interface_signal = interface_signals.get(signal.signal)
+        for [signal_name, signal_handler_configs] in si.signal_handlers_by_signal().items():
+            interface_signal = interface_signals.get(signal_name)
             if interface_signal:
-
-                on_signal_method_name = "on_" + camel_to_snake(signal.signal)
+                # logger.warning(f"_signal_handlers: {obj_interface._signal_handlers}")
+                on_signal_method_name = "on_" + camel_to_snake(signal_name)
                 obj_interface.__getattribute__(on_signal_method_name)(
                     lambda a, b, c:
                         asyncio.gather(
-                            on_signal(bus_name_subscriptions, path, interface.name, signal, a, b, c),
+                            on_signal(bus_name_subscriptions, path, interface.name, signal_handler_configs, a, b, c),
                         )
                 )
-                logger.info(f"subscribed on_signal: bus_name={bus_name}, path={path}, interface={interface.name}, signal={signal.signal}")
+                logger.info(f"subscribed with signal_handler: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
             else:
-                logger.warning(f"Invalid signal: bus_name={bus_name}, path={path}, interface={interface.name}, signal={signal.signal}")
+                logger.warning(f"Invalid signal: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
 
     async def process_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface):
 
-        # logger.debug(f"process_interface: {bus_name}, {path}, {interface}")
-        subscription_configs = self.get_subscription_configs(bus_name, path)
+        logger.debug(f"process_interface: {bus_name}, {path}, {interface.name}")
+        subscription_configs = self.config.get_subscription_configs(bus_name, path)
         for subscription in subscription_configs:
             logger.debug(f"processing subscription config: {subscription.bus_name}, {subscription.path}")
             for subscription_interface in subscription.interfaces:
@@ -153,7 +102,7 @@ class DbusClient:
         introspection = await self.bus.introspect(bus_name, path)
 
         if len(introspection.nodes) == 0:
-            logger.info(f"leaf node: bus_name={bus_name}, path={path}, is_root={introspection.is_root}, interfaces={[i.name for i in introspection.interfaces]}")
+            logger.debug(f"leaf node: bus_name={bus_name}, path={path}, is_root={introspection.is_root}, interfaces={[i.name for i in introspection.interfaces]}")
 
         for interface in introspection.interfaces:
             await self.process_interface(bus_name, path, introspection, interface)
@@ -162,21 +111,44 @@ class DbusClient:
             path_seperator = "" if path.endswith('/') else "/"
             await self.visit_bus_name_path(bus_name, f"{path}{path_seperator}{node.name}")
 
+    async def subcribe_to_connected_bus_names(self):
+
+        # self.bus.
+        pass
+
     async def handle_bus_name_added(self, bus_name: str):
 
-        if not self.is_bus_name_configured(bus_name):
+        if not self.config.is_bus_name_configured(bus_name):
             return
+
+        # sanity checks
+        for umh in self.bus._user_message_handlers:
+            umh_bus_name = umh.__self__.bus_name
+                # umh_bus_name = umh.__self__.bus_name
+            if umh_bus_name == bus_name:
+                logger.warning(f"handle_bus_name_added: {umh_bus_name} already added")
 
         await self.visit_bus_name_path(bus_name, "/")
 
     async def handle_bus_name_removed(self, bus_name: str):
 
-        proxy_object_state = self.subscriptions.get(bus_name)
+        bus_name_subscriptions = self.subscriptions.get(bus_name)
 
-        if proxy_object_state:
-        #     # stop listening for events
-        #     properties = obj.get_interface('org.freedesktop.DBus.Properties')
-        #     properties.off_properties_changed(self.on_properties_changed)
+        if bus_name_subscriptions:
+            for proxy_object in bus_name_subscriptions.path_objects.values():
+                for interface in proxy_object._interfaces.values():
+                    proxy_interface: dbus_aio.proxy_object.ProxyInterface = interface
+
+                    # officially you should do 'off_...' but the below is easier
+                    # proxy_interface.off_properties_changed(self.on_properties_changed)
+
+                    # clean lingering interface matchrule from bus
+                    if proxy_interface._signal_match_rule in self.bus._match_rules.keys():
+                        self.bus._remove_match_rule(proxy_interface._signal_match_rule)
+
+                    # clean lingering interface messgage handler from bus
+                    self.bus.remove_message_handler(proxy_interface._message_handler)
+
             del self.subscriptions[bus_name]
 
     async def dbus_name_owner_changed_callback(self, name, old_owner, new_owner):

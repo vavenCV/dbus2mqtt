@@ -1,3 +1,5 @@
+import fnmatch
+
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -21,7 +23,7 @@ env = Environment(
 )
 
 @dataclass
-class SignalConfig:
+class SignalHandlerConfig:
     signal: str
     filter: str
     payload_template: str | dict[str, Any]
@@ -58,9 +60,20 @@ class PropertyConfig:
 @dataclass
 class InterfaceConfig:
     interface: str
-    signals: list[SignalConfig] = field(default_factory=list)
+    signal_handlers: list[SignalHandlerConfig] = field(default_factory=list)
     methods: list[MethodConfig] = field(default_factory=list)
     properties: list[PropertyConfig] = field(default_factory=list)
+
+    def signal_handlers_by_signal(self) -> dict[str, list[SignalHandlerConfig]]:
+        res: dict[str, list[SignalHandlerConfig]] = {}
+
+        for handler in self.signal_handlers:
+            if handler.signal not in res:
+                res[handler.signal] = []
+            res[handler.signal].append(handler)
+
+        return res
+
 
 @dataclass
 class SubscriptionConfig:
@@ -71,6 +84,20 @@ class SubscriptionConfig:
 @dataclass
 class DbusConfig:
     subscriptions: list[SubscriptionConfig]
+
+    def is_bus_name_configured(self, bus_name: str) -> bool:
+
+        for subscription in self.subscriptions:
+            if fnmatch.fnmatchcase(bus_name, subscription.bus_name):
+                return True
+        return False
+
+    def get_subscription_configs(self, bus_name: str, path: str) -> list[SubscriptionConfig]:
+        res: list[SubscriptionConfig] = []
+        for subscription in self.subscriptions:
+            if fnmatch.fnmatchcase(bus_name, subscription.bus_name) and fnmatch.fnmatchcase(path, subscription.path):
+                res.append(subscription)
+        return res
 
 @dataclass
 class MqttConfig:

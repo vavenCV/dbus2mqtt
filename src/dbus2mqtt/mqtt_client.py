@@ -10,7 +10,7 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
 from dbus2mqtt.config import MqttConfig
-from dbus2mqtt.handler import DbusSignalHandler
+from dbus2mqtt.dbus_subscription import DbusSignalHandler
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class MqttClient:
 
     def on_dbus_signal(self, bus_name: str, path: str, interface: str, signal: str, topic, msg: dict[str, Any]):
         payload = json.dumps(msg)
-        logger.info(f"msg: {payload}")
+        logger.debug(f"on_dbus_signal: payload={payload}")
         self.client.publish(topic=topic, payload=payload)
 
     async def run(self):
