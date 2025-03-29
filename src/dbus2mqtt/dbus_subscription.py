@@ -19,5 +19,3 @@ class BusNameSubscriptions:
         self.bus_name = bus_name
         self.signal_handler = signal_handler
         self.path_objects: dict[str, dbus_aio.proxy_object.ProxyObject] = {}
-
-

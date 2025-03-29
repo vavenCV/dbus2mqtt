@@ -10,8 +10,8 @@ dbus:
       interfaces:
         - interface: org.freedesktop.DBus.Properties
           signal_handlers:
-              # TODO: allow for trigger by timer
-              # Position property updates do not trigger a PropertiesChange event
+            # TODO: allow for trigger by timer
+            # Position property updates do not trigger a PropertiesChange event
             - signal: PropertiesChanged
               filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
               payload_template: |
@@ -34,7 +34,7 @@ dbus:
         - interface: org.mpris.MediaPlayer2
           methods:
             - method: Quit
-            
+
         - interface: org.mpris.MediaPlayer2.Player
           methods:
             - method: Pause
