@@ -25,7 +25,7 @@ payload
 ## dbus debugging
 
 ```bash
-uv run main.py
+uv run dbus2mqtt
 
 # https://dbus.freedesktop.org/doc/dbus-tutorial.html
 # https://dbus.freedesktop.org/doc/dbus-specification.html
