@@ -54,6 +54,7 @@ def main():
     parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"], default_env=True, env_prefix=False)
 
     parser.add_argument("--verbose", "-v", nargs="?", const=True, help="Enable verbose logging")
+    parser.add_argument("--config", action="config")
     parser.add_class_arguments(Config)
 
     cfg = parser.parse_args()
