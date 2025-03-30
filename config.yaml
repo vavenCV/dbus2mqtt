@@ -10,6 +10,9 @@ dbus:
       # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
+          # signals:
+          #   - signal: PropertiesChanged  # simple forwarding of signal to mqtt
+          #     mqtt_signal_topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
           signal_handlers:
             # TODO: allow for trigger by timer
             # Position property updates do not trigger a PropertiesChange event
@@ -31,14 +34,17 @@ dbus:
                   {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
               # mqtt_topic: dbus2mqtt/{{ bus_name }}/state
               mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
+          methods:
+            - method: GetAll
 
         - interface: org.mpris.MediaPlayer2
-          mqtt_call_method_topic: dbus2mqtt/{{ host }}/org.mpris.MediaPlayer2/command
+          mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
           methods:
             - method: Quit
 
         - interface: org.mpris.MediaPlayer2.Player
           mqtt_call_method_topic: dbus2mqtt/{{ host }}/org.mpris.MediaPlayer2/command
+          # bus_name_selection: first/all/...
           methods:
             - method: Pause
             - method: Play
@@ -49,7 +55,7 @@ dbus:
             - property: Metadata
             - property: Volume
 
-# publishers:
+# automations:
 #   - triggers:
 #       - schedule: 5s
 #       - on_signal:

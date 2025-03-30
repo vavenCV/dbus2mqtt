@@ -209,11 +209,15 @@ class DbusClient:
                                     self.call_dbus_interface_method(interface, method.method, payload_method_args), self.loop
                                 )
 
-                                logger.info(f"{method.method}: res={f.result()}")
-                                calls_done.append(method.method)
+                                try:
+                                    result = f.result(timeout=5)  # Optional timeout to prevent indefinite blocking
+                                    logger.info(f"{method.method}: res={result}")
+                                    calls_done.append(method.method)
+                                except Exception as e:
+                                    logger.error(f"Error calling {method.method}: {e}", exc_info=True)
 
         if len(calls_done) == 0:
-            logger.info(f"No configured or active dbus subscriptions for topic={topic}, method={payload_method}")
+            logger.info(f"No configured or active dbus subscriptions for topic={topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
 
         # bus_name_subscription.
         # render_mqtt_call_method_topic
