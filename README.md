@@ -10,9 +10,9 @@ Features
 
 Feature TODO list
 
-* Implement command handling from MQTT to dbus
-* Add support for timer triggers. The PropertiesChanged signal is not triggered for all properties like 'Position'
-* Stability testing and play around with dbus-next to see how it behaves. An alternative might be python-sdbus 
+* Implement method handling from MQTT to dbus
+* Remove dependency between dbus signal handling and message publishing. Allow for multiple trigger types to publish payloads. Message publishing can be triggerd by timer/initial start/property change signal. Needed because the PropertiesChanged signal is not triggered for all properties like 'Position'
+* Stability testing and play around with dbus-next to see how it behaves. An alternative might be python-sdbus
 
 ## Getting started with dbus2mqtt
 
@@ -80,7 +80,7 @@ dbus:
             - method: Stop
 ```
 
-This configuration will expose 4 methods. Triggering methods can be done by publishing json messages to the corresponding topics. 
+This configuration will expose 4 methods. Triggering methods can be done by publishing json messages to the corresponding topics.
 
 The exact arguments to be provided depends on the dbus interface being exposed. For MPRIS these can be found here: <https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html>
 

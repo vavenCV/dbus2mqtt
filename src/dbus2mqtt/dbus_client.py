@@ -1,5 +1,9 @@
 import asyncio
+import json
 import logging
+
+from queue import Empty, Queue
+from typing import Any
 
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
@@ -9,19 +13,21 @@ from dbus2mqtt.config import (
     InterfaceConfig,
 )
 from dbus2mqtt.dbus_signal_processor import on_signal
-from dbus2mqtt.dbus_subscription import BusNameSubscriptions, DbusSignalHandler
-from dbus2mqtt.dbus_util import camel_to_snake
+from dbus2mqtt.dbus_types import BusNameSubscriptions, DbusSignalHandler
+from dbus2mqtt.dbus_util import camel_to_snake, unwrap_dbus_object
 
 logger = logging.getLogger(__name__)
 
 
 class DbusClient:
 
-    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus, signal_handler: DbusSignalHandler):
+    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus, signal_handler: DbusSignalHandler, loop):
         self.config = config
         self.bus = bus
         self.subscriptions: dict[str, BusNameSubscriptions] = {}
         self.signal_handler = signal_handler
+        self.queue = Queue()
+        self.loop = loop
 
     async def connect(self):
 
@@ -161,3 +167,76 @@ class DbusClient:
         if old_owner and not new_owner:
             logger.debug(f'NameOwnerChanged.old: name={name}')
             await self.handle_bus_name_removed(name)
+
+    async def call_dbus_interface_method(self, interface: dbus_aio.proxy_object.ProxyInterface, method: str, method_args: list):
+
+        call_method_name = "call_" + camel_to_snake(method)
+        res = await interface.__getattribute__(call_method_name)(*method_args)
+
+        if res:
+            res = unwrap_dbus_object(res)
+
+        logger.info(f"call_dbus_interface_method: method={call_method_name}, res={res}")
+
+        return res
+
+    def on_mqtt_msg(self, topic: str, payload: dict[str, Any]):
+        logger.info(f"on_mqtt_msg: topic={topic}, payload={json.dumps(payload)}")
+        # self.queue.put({
+        #     "topic": topic,
+        #     "payload": payload
+        # })
+
+        payload_method = payload["method"]
+        payload_method_args = payload["args"]
+
+        calls_done: list[str] = []
+
+        # loop = asyncio.get_running_loop()
+        # loop = asyncio.new_event_loop()
+
+        for [bus_name, bus_name_subscription] in self.subscriptions.items():
+            for [path, proxy_object] in bus_name_subscription.path_objects.items():
+                for subscription_configs in self.config.get_subscription_configs(bus_name=bus_name, path=path):
+                    for interface_config in subscription_configs.interfaces:
+                        for method in interface_config.methods:
+
+                            # filter configured method, configured topic, ...
+                            if method.method == payload_method:
+                                interface = proxy_object.get_interface(name=interface_config.interface)
+
+                                f = asyncio.run_coroutine_threadsafe(
+                                    self.call_dbus_interface_method(interface, method.method, payload_method_args), self.loop
+                                )
+
+                                logger.info(f"{method.method}: res={f.result()}")
+                                calls_done.append(method.method)
+
+        if len(calls_done) == 0:
+            logger.info(f"No configured or active dbus subscriptions for topic={topic}, method={payload_method}")
+
+        # bus_name_subscription.
+        # render_mqtt_call_method_topic
+        # bus_name=org.mpris.MediaPlayer2.vlc, path=/org/mpris/MediaPlayer2, interface=org.mpris.MediaPlayer2.Player
+
+        # raw mode, payload contains: bus_name (specific or wildcard), path, interface_name
+        # topic: dbus2mqtt/raw (with allowlist check)
+
+        # predefined mode with topic matching from configuration
+        # topic: dbus2mqtt/{{ host}}/MediaPlayer/command
+
+
+        # check if its a method call
+
+        # get all matching bus_names
+
+        # for each bus_name, get interface (interface must be provided via config or payload)
+    async def consume_mqtt_messages(self):
+        self.log.info("Starting consumer for OpenHAB MQTT messages ...")
+        while not self.stopped:
+            try:
+                (client, userdata, message) = self.queue.get(block=False)
+                await self.async_handle_openhab_mqtt_message(client, userdata, message)
+            except Empty:
+                await asyncio.sleep(1)
+                continue

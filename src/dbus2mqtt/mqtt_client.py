@@ -10,16 +10,16 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
 from dbus2mqtt.config import MqttConfig
-from dbus2mqtt.dbus_subscription import DbusSignalHandler
+from dbus2mqtt.mqtt_types import MqttMsgHandler
 
 logger = logging.getLogger(__name__)
 
 class MqttClient:
 
-    def __init__(self, config: MqttConfig, dbus_signal_handler: DbusSignalHandler):
+    def __init__(self, config: MqttConfig, mqtt_msg_handler: MqttMsgHandler):
         self.config = config
 
-        dbus_signal_handler.handler = self.on_dbus_signal
+        self.mqtt_msg_handler = mqtt_msg_handler
 
         self.client = mqtt.Client(CallbackAPIVersion.VERSION2)
 
@@ -57,8 +57,13 @@ class MqttClient:
             logger.info(f"on_connect: Connected to {self.config.host}:{self.config.port}")
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
-            client.subscribe("dbus2mqtt")
+            client.subscribe("dbus2mqtt/#")
 
+    def on_message(self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage):
 
-    def on_message(self, client, userdata, msg):
-        logger.info(f"on_message: client={client}, userdata={userdata}, msg={msg}")
+        try:
+            json_payload = json.loads(msg.payload)
+            logger.info(f"on_message: msg.topic={msg.topic}, msg.pathload={json.dumps(json_payload)}")
+            self.mqtt_msg_handler.on_mqtt_msg(msg.topic, json_payload)
+        except json.JSONDecodeError as e:
+            logger.warning(f"on_message: Unexpected payload, expection json. msg.topic={msg.topic}, msg.payload={msg.payload}, error={e}")

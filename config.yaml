@@ -6,6 +6,7 @@ dbus:
   subscriptions:
     - bus_name: org.mpris.MediaPlayer2.*
       path: /org/mpris/MediaPlayer2
+
       # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
@@ -32,15 +33,31 @@ dbus:
               mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
 
         - interface: org.mpris.MediaPlayer2
+          mqtt_call_method_topic: dbus2mqtt/{{ host }}/org.mpris.MediaPlayer2/command
           methods:
             - method: Quit
 
         - interface: org.mpris.MediaPlayer2.Player
+          mqtt_call_method_topic: dbus2mqtt/{{ host }}/org.mpris.MediaPlayer2/command
           methods:
             - method: Pause
             - method: Play
+            - method: PlayPause
             - method: OpenUri
             - method: Stop
           properties:
             - property: Metadata
             - property: Volume
+
+# publishers:
+#   - triggers:
+#       - schedule: 5s
+#       - on_signal:
+#           interface: org.freedesktop.DBus.Properties
+#           signal: PropertiesChanged
+#           filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+#     actions:
+#       - publish_mqtt:
+#           topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
+#           payload: |
+#             {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}

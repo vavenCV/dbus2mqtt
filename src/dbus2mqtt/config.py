@@ -12,7 +12,7 @@ from jinja2 import (
 )
 from pydantic import SecretStr
 
-env = Environment(
+jinja2_env = Environment(
     loader=BaseLoader(),
     extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
     # autoescape=select_autoescape()
@@ -29,9 +29,8 @@ class SignalHandlerConfig:
     payload_template: str | dict[str, Any]
     mqtt_topic: str
 
-    async def matches_filter(self, *args) -> bool:
-        res = await env.from_string(self.filter).render_async(args=args)
-        return res == "True"
+    def matches_filter(self, *args) -> bool:
+        return jinja2_env.from_string(self.filter).renderc(args=args)
 
     async def render_payload_template(self, args, context: dict[str, Any]) -> Any:
         # print(f"a: {self.payload_template}, args={args}")
@@ -40,14 +39,13 @@ class SignalHandlerConfig:
         if dict_template:
             template = yaml.safe_dump(template)
 
-        rendered = await env.from_string(template).render_async(args=args, **context)
+        rendered = await jinja2_env.from_string(template).render_async(args=args, **context)
         rendered = yaml.safe_load(rendered)
 
         return rendered
 
-    async def render_mqtt_topic(self, context: dict[str, Any]) -> Any:
-        rendered = await env.from_string(self.mqtt_topic).render_async(**context)
-        return rendered
+    def render_mqtt_topic(self, context: dict[str, Any]) -> Any:
+        return jinja2_env.from_string(self.mqtt_topic).render(**context)
 
 @dataclass
 class MethodConfig:
@@ -60,6 +58,7 @@ class PropertyConfig:
 @dataclass
 class InterfaceConfig:
     interface: str
+    mqtt_call_method_topic: str | None
     signal_handlers: list[SignalHandlerConfig] = field(default_factory=list)
     methods: list[MethodConfig] = field(default_factory=list)
     properties: list[PropertyConfig] = field(default_factory=list)
@@ -74,6 +73,10 @@ class InterfaceConfig:
 
         return res
 
+    def render_mqtt_call_method_topic(self, context: dict[str, Any]) -> Any:
+        if self.mqtt_call_method_topic:
+            return jinja2_env.from_string(self.mqtt_call_method_topic).render(**context)
+        return None
 
 @dataclass
 class SubscriptionConfig:

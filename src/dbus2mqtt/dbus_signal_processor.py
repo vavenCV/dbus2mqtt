@@ -6,7 +6,7 @@ from dbus_next.errors import DBusError
 from dbus2mqtt.config import (
     SignalHandlerConfig,
 )
-from dbus2mqtt.dbus_subscription import BusNameSubscriptions
+from dbus2mqtt.dbus_types import BusNameSubscriptions
 from dbus2mqtt.dbus_util import camel_to_snake, unwrap_dbus_object
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, int
     unwrapped_args = [unwrap_dbus_object(o) for o in args]
 
     for signal_handler_config in signal_handler_configs:
-        matches_filter = await signal_handler_config.matches_filter(*args)
+        matches_filter = signal_handler_config.matches_filter(*args)
         if matches_filter:
 
             async def async_dbus_call_fn(interface: str, method: str, bus_name: str):
@@ -31,16 +31,21 @@ async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, int
                 res = await obj_interface.__getattribute__(call_method_name)(bus_name)
                 return unwrap_dbus_object(res)
 
-            template_context = {
+            template_interface_context = {
                 "bus_name": bus_name,
                 "path": proxy_object.path,
                 "interface": interface_name,
+            }
+
+            async_template_interface_context = {
                 "dbus_call": async_dbus_call_fn
             }
 
             try:
-                payload = await signal_handler_config.render_payload_template(unwrapped_args, context=template_context)
-                mqtt_topic = await signal_handler_config.render_mqtt_topic(context=template_context)
+                payload = await signal_handler_config.render_payload_template(unwrapped_args, context={
+                    **template_interface_context, **async_template_interface_context
+                })
+                mqtt_topic = await signal_handler_config.render_mqtt_topic(context=template_interface_context)
             except DBusError as e:
                 logger.warning(f"Error rendering jinja template, DBusError: {e.text}")
                 return
