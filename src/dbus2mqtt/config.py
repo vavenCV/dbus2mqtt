@@ -15,9 +15,12 @@ from pydantic import SecretStr
 jinja2_env = Environment(
     loader=BaseLoader(),
     extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
-    # autoescape=select_autoescape()
-    # trim_blocks=True,
-    # lstrip_blocks=True,
+    undefined=StrictUndefined
+)
+
+jinja2_async_env = Environment(
+    loader=BaseLoader(),
+    extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
     undefined=StrictUndefined,
     enable_async=True
 )
@@ -30,7 +33,8 @@ class SignalHandlerConfig:
     mqtt_topic: str
 
     def matches_filter(self, *args) -> bool:
-        return jinja2_env.from_string(self.filter).renderc(args=args)
+        res = jinja2_env.from_string(self.filter).render(args=args)
+        return res == "True"
 
     async def render_payload_template(self, args, context: dict[str, Any]) -> Any:
         # print(f"a: {self.payload_template}, args={args}")
@@ -39,7 +43,7 @@ class SignalHandlerConfig:
         if dict_template:
             template = yaml.safe_dump(template)
 
-        rendered = await jinja2_env.from_string(template).render_async(args=args, **context)
+        rendered = await jinja2_async_env.from_string(template).render_async(args=args, **context)
         rendered = yaml.safe_load(rendered)
 
         return rendered

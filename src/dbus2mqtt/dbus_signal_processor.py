@@ -45,7 +45,7 @@ async def on_signal(bus_name_subscriptions: BusNameSubscriptions, path: str, int
                 payload = await signal_handler_config.render_payload_template(unwrapped_args, context={
                     **template_interface_context, **async_template_interface_context
                 })
-                mqtt_topic = await signal_handler_config.render_mqtt_topic(context=template_interface_context)
+                mqtt_topic = signal_handler_config.render_mqtt_topic(context=template_interface_context)
             except DBusError as e:
                 logger.warning(f"Error rendering jinja template, DBusError: {e.text}")
                 return
