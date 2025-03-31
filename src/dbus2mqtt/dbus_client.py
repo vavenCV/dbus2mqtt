@@ -2,8 +2,7 @@ import asyncio
 import json
 import logging
 
-from queue import Empty, Queue
-from typing import Any
+from queue import Empty
 
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
@@ -13,21 +12,20 @@ from dbus2mqtt.config import (
     InterfaceConfig,
 )
 from dbus2mqtt.dbus_signal_processor import on_signal
-from dbus2mqtt.dbus_types import BusNameSubscriptions, DbusSignalHandler
+from dbus2mqtt.dbus_types import BusNameSubscriptions
 from dbus2mqtt.dbus_util import camel_to_snake, unwrap_dbus_object
+from dbus2mqtt.event_broker import DbusSignalWithState, EventBroker, MqttMessage
 
 logger = logging.getLogger(__name__)
 
 
 class DbusClient:
 
-    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus, signal_handler: DbusSignalHandler, loop):
+    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus, event_broker: EventBroker):
         self.config = config
         self.bus = bus
+        self.event_broker = event_broker
         self.subscriptions: dict[str, BusNameSubscriptions] = {}
-        self.signal_handler = signal_handler
-        self.queue = Queue()
-        self.loop = loop
 
     async def connect(self):
 
@@ -46,9 +44,9 @@ class DbusClient:
             # subscribe to NameOwnerChanged which allows us to detect new bus_names
             dbus_interface.on_name_owner_changed(self.dbus_name_owner_changed_callback)
 
-            # subscribe to existing registed bus_names we are interested in
+            # subscribe to existing registered bus_names we are interested in
             connected_bus_names = await dbus_interface.call_list_names()
-            # logger.debug(f"connect: connected_bus_names={connected_bus_names}")
+
             for bus_name in connected_bus_names:
                 await self.handle_bus_name_added(bus_name)
 
@@ -56,7 +54,7 @@ class DbusClient:
 
         bus_name_subscriptions = self.subscriptions.get(bus_name)
         if not bus_name_subscriptions:
-            bus_name_subscriptions = BusNameSubscriptions(bus_name, self.signal_handler)
+            bus_name_subscriptions = BusNameSubscriptions(bus_name)
             self.subscriptions[bus_name] = bus_name_subscriptions
 
         proxy_object = bus_name_subscriptions.path_objects.get(path)
@@ -78,13 +76,13 @@ class DbusClient:
         for [signal_name, signal_handler_configs] in si.signal_handlers_by_signal().items():
             interface_signal = interface_signals.get(signal_name)
             if interface_signal:
-                # logger.warning(f"_signal_handlers: {obj_interface._signal_handlers}")
+
                 on_signal_method_name = "on_" + camel_to_snake(signal_name)
                 obj_interface.__getattribute__(on_signal_method_name)(
                     lambda a, b, c:
-                        asyncio.gather(
-                            on_signal(bus_name_subscriptions, path, interface.name, signal_handler_configs, a, b, c),
-                        )
+                        self.event_broker.on_dbus_signal(DbusSignalWithState(
+                            bus_name_subscriptions, path, interface.name, signal_handler_configs, args=[a, b, c]
+                        ))
                 )
                 logger.info(f"subscribed with signal_handler: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
@@ -116,11 +114,6 @@ class DbusClient:
         for node in introspection.nodes:
             path_seperator = "" if path.endswith('/') else "/"
             await self.visit_bus_name_path(bus_name, f"{path}{path_seperator}{node.name}")
-
-    async def subcribe_to_connected_bus_names(self):
-
-        # self.bus.
-        pass
 
     async def handle_bus_name_added(self, bus_name: str):
 
@@ -176,65 +169,85 @@ class DbusClient:
         if res:
             res = unwrap_dbus_object(res)
 
-        logger.info(f"call_dbus_interface_method: method={call_method_name}, res={res}")
+        logger.info(f"call_dbus_interface_method: bus_name={interface.bus_name}, interface={interface.introspection.name}, method={method}, res={res}")
 
         return res
 
-    def on_mqtt_msg(self, topic: str, payload: dict[str, Any]):
-        logger.info(f"on_mqtt_msg: topic={topic}, payload={json.dumps(payload)}")
+    async def mqtt_receive_queue_processor_task(self):
+        """Continuously processes messages from the async queue."""
+        while True:
+            msg = await self.event_broker.mqtt_receive_queue.async_q.get()  # Wait for a message
+            try:
+                await self.on_mqtt_msg(msg)
+            except Exception as e:
+                logger.warning(f"mqtt_receive_queue_processor_task: Exception {e}", exc_info=True)
+            finally:
+                self.event_broker.mqtt_receive_queue.async_q.task_done()
+
+    async def dbus_signal_queue_processor_task(self):
+        """Continuously processes messages from the async queue."""
+        while True:
+            signal = await self.event_broker.dbus_signal_queue.async_q.get()  # Wait for a message
+            try:
+                await on_signal(
+                    self.event_broker,
+                    signal.bus_name_subscriptions,
+                    signal.path,
+                    signal.interface_name,
+                    signal.signal_handler_configs,
+                    signal.args
+                )
+            except Exception as e:
+                logger.warning(f"dbus_signal_queue_processor_task: Exception {e}", exc_info=True)
+            finally:
+                self.event_broker.dbus_signal_queue.async_q.task_done()
+
+
+    async def on_mqtt_msg(self, msg: MqttMessage):
         # self.queue.put({
         #     "topic": topic,
         #     "payload": payload
         # })
 
-        payload_method = payload["method"]
-        payload_method_args = payload["args"]
+        found_matching_topic = False
+        for subscription_configs in self.config.subscriptions:
+            for interface_config in subscription_configs.interfaces:
+                # TODO, performance improvement
+                mqtt_topic = interface_config.render_mqtt_call_method_topic({})
+                found_matching_topic |= mqtt_topic == msg.topic
 
+        if not found_matching_topic:
+            return
+
+        logger.debug(f"on_mqtt_msg: topic={msg.topic}, payload={json.dumps(msg.payload)}")
         calls_done: list[str] = []
 
-        # loop = asyncio.get_running_loop()
-        # loop = asyncio.new_event_loop()
+        payload_method = msg.payload["method"]
+        payload_method_args = msg.payload.get("args") or []
 
         for [bus_name, bus_name_subscription] in self.subscriptions.items():
             for [path, proxy_object] in bus_name_subscription.path_objects.items():
                 for subscription_configs in self.config.get_subscription_configs(bus_name=bus_name, path=path):
                     for interface_config in subscription_configs.interfaces:
+
                         for method in interface_config.methods:
 
                             # filter configured method, configured topic, ...
                             if method.method == payload_method:
                                 interface = proxy_object.get_interface(name=interface_config.interface)
 
-                                f = asyncio.run_coroutine_threadsafe(
-                                    self.call_dbus_interface_method(interface, method.method, payload_method_args), self.loop
-                                )
-
-                                try:
-                                    result = f.result(timeout=5)  # Optional timeout to prevent indefinite blocking
-                                    logger.info(f"{method.method}: res={result}")
-                                    calls_done.append(method.method)
-                                except Exception as e:
-                                    logger.error(f"Error calling {method.method}: {e}", exc_info=True)
+                                await self.call_dbus_interface_method(interface, method.method, payload_method_args)
+                                calls_done.append(method.method)
 
         if len(calls_done) == 0:
-            logger.info(f"No configured or active dbus subscriptions for topic={topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
-
-        # bus_name_subscription.
-        # render_mqtt_call_method_topic
-        # bus_name=org.mpris.MediaPlayer2.vlc, path=/org/mpris/MediaPlayer2, interface=org.mpris.MediaPlayer2.Player
+            logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
 
         # raw mode, payload contains: bus_name (specific or wildcard), path, interface_name
         # topic: dbus2mqtt/raw (with allowlist check)
 
         # predefined mode with topic matching from configuration
-        # topic: dbus2mqtt/{{ host}}/MediaPlayer/command
+        # topic: dbus2mqtt/MediaPlayer/command
 
-
-        # check if its a method call
-
-        # get all matching bus_names
-
-        # for each bus_name, get interface (interface must be provided via config or payload)
     async def consume_mqtt_messages(self):
         self.log.info("Starting consumer for OpenHAB MQTT messages ...")
         while not self.stopped:

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 import sys
 
 from typing import cast
@@ -11,50 +12,56 @@ from dotenv import load_dotenv
 
 from dbus2mqtt.config import Config, DbusConfig, MqttConfig
 from dbus2mqtt.dbus_client import DbusClient
-from dbus2mqtt.dbus_types import DbusSignalHandler
+from dbus2mqtt.event_broker import EventBroker
 from dbus2mqtt.mqtt_client import MqttClient
-from dbus2mqtt.mqtt_types import MqttMsgHandler
 
 logger = logging.getLogger(__name__)
 
 
-async def setup_dbus(config: DbusConfig, dbus_signal_handler: DbusSignalHandler, mqtt_msg_handler: MqttMsgHandler):
+async def dbus_processor_task(config: DbusConfig, event_broker: EventBroker):
 
     bus = dbus_aio.message_bus.MessageBus()
 
-    loop = asyncio.get_running_loop()
-
-    dbus_client = DbusClient(config, bus, dbus_signal_handler, loop)
-    mqtt_msg_handler.handler = dbus_client.on_mqtt_msg
-
+    dbus_client = DbusClient(config, bus, event_broker)
     await dbus_client.connect()
 
-    await loop.create_future()
-
-async def setup_mqtt(config: MqttConfig, dbus_signal_handler: DbusSignalHandler, mqtt_msg_handler: MqttMsgHandler):
-
-    mqtt_client = MqttClient(config, mqtt_msg_handler)
-    dbus_signal_handler.handler = mqtt_client.on_dbus_signal
-
-    mqtt_client.connect()
-
-    # run mqtt client forever
     loop = asyncio.get_running_loop()
-    loop.create_task(asyncio.to_thread(mqtt_client.client.loop_forever))
-    # loop.run_in_executor(None, mqtt_client.client.loop_forever)
-
-async def run(loop, config: Config):
-
-    # handler that mbus_client uses to forward signals to mqtt_client
-    dbus_signal_handler = DbusSignalHandler()
-
-    # handler that mqtt_client uses to forward messages to dbus_client
-    mqtt_msg_handler = MqttMsgHandler()
+    dbus_client_run_future = loop.create_future()
 
     await asyncio.gather(
-        setup_dbus(config.dbus, dbus_signal_handler, mqtt_msg_handler),
-        setup_mqtt(config.mqtt, dbus_signal_handler, mqtt_msg_handler)
+        dbus_client_run_future,
+        asyncio.create_task(dbus_client.dbus_signal_queue_processor_task()),
+        asyncio.create_task(dbus_client.mqtt_receive_queue_processor_task()),
     )
+
+async def mqtt_processor_task(config: MqttConfig, event_broker: EventBroker):
+
+    mqtt_client = MqttClient(config, event_broker)
+    mqtt_client.connect()
+    mqtt_client.client.loop_start()
+
+    loop = asyncio.get_running_loop()
+    mqtt_client_run_future = loop.create_future()
+
+    try:
+        await asyncio.gather(
+            mqtt_client_run_future,
+            asyncio.create_task(mqtt_client.mqtt_publish_queue_processor_task()),
+        )
+    except asyncio.CancelledError:
+        mqtt_client.client.loop_stop()
+
+async def run(config: Config):
+
+    event_broker = EventBroker()
+
+    try:
+        await asyncio.gather(
+            dbus_processor_task(config.dbus, event_broker),
+            mqtt_processor_task(config.mqtt, event_broker)
+        )
+    except asyncio.CancelledError:
+        pass
 
 
 def main():
@@ -82,4 +89,24 @@ def main():
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(run(loop, config))
+
+    # Handle Ctrl+C gracefully
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown(loop)))
+
+    try:
+        loop.run_until_complete(run(config))
+    except asyncio.CancelledError:
+        pass
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.close()
+
+async def shutdown(loop):
+    logger.info("Shutting down event loop...")
+    tasks = asyncio.all_tasks() - {asyncio.current_task()}
+    for task in tasks:
+        task.cancel()
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    logger.info(f"Sucessfully stopped {len(results)} tasks")
+    loop.stop()

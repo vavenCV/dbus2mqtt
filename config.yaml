@@ -11,6 +11,7 @@ dbus:
       interfaces:
         - interface: org.freedesktop.DBus.Properties
           # signals:
+          #     # with no postprocessing, just use handlers otherwise
           #   - signal: PropertiesChanged  # simple forwarding of signal to mqtt
           #     mqtt_signal_topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
           signal_handlers:
@@ -43,7 +44,7 @@ dbus:
             - method: Quit
 
         - interface: org.mpris.MediaPlayer2.Player
-          mqtt_call_method_topic: dbus2mqtt/{{ host }}/org.mpris.MediaPlayer2/command
+          mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
           # bus_name_selection: first/all/...
           methods:
             - method: Pause
@@ -55,8 +56,9 @@ dbus:
             - property: Metadata
             - property: Volume
 
-# automations:
-#   - triggers:
+# handlers:
+#   - name: mpris_on_properties_changes
+#     triggers:
 #       - schedule: 5s
 #       - on_signal:
 #           interface: org.freedesktop.DBus.Properties
