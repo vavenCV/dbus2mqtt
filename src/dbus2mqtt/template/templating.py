@@ -12,8 +12,11 @@ from jinja2 import (
 from yaml import SafeDumper, SafeLoader
 
 
-def _represent_template_str(dumper: SafeDumper, data):
-    return dumper.represent_str(f"template:{data}:template")
+def _represent_template_str(dumper: SafeDumper, data: str):
+    data = data.replace("{{", "template:{{", 1)
+    data = data.replace("}}", "}}:template", 1)
+    # return dumper.represent_str(f"template:{data}:template")
+    return dumper.represent_str(data)
 
 class _CustomSafeLoader(SafeLoader):
     def __init__(self, stream):
@@ -79,6 +82,7 @@ class TemplateEngine:
         value = _mark_templates(value)
         value = yaml.dump(value, Dumper=_CustomSafeDumper)
         # value= yaml.safe_dump(value, default_style=None)
+        print(f"_dict_to_templatable_str: {value}")
         value = value.replace("template:{{", "{{").replace("}}:template", "}}")
         # print(value)
         return value

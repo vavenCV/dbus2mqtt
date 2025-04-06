@@ -72,7 +72,7 @@ dbus:
         #       filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
         #   global_template_context:
         #     active_mpris_player: "{{ dbus_signal.args[0] }}"  # sets active bus_name
-        - name: "sensor_processing_flow"
+        - name: "MPRIS publish state"
           triggers:
             # - type: mqtt
             #   topic: "sensor/input"
@@ -112,10 +112,14 @@ dbus:
                 # mpris_bus_name: "{{ get_preferred_mpris('org.mpris.MediaPlayer2.*') | first }}"
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+              # bus_name: defaults to <subscription>
+              # path: defaults to <subscription>
               payload_template: |
                 {{ dbus_call(bus_name_selector_ref, 'org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
+              # bus_name: defaults to <subscription>
+              # path: defaults to <subscription>
               payload_template: |
                 interface_name: {{ args[0] }}
                 changed_properties:
@@ -127,16 +131,21 @@ dbus:
                   {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
 
 flows:
-  - name: "publish internal state"
+  - name: "Publish dbus2mqtt state"
     triggers:
       - type: schedule
-        interval: { seconds: 1 }
+        interval: { seconds: 10 }
     actions:
       - type: context_set
         context:
           mpris_bus_names: '{{ dbus_list("org.mpris.MediaPlayer2.*") }}'
       - type: mqtt_publish
         topic: dbus2mqtt/subscriptions/state
+        # payload_yaml_template
+        # payload_json_template
+        # payload_text_template
+        # payload_type: yaml/json/text
         payload_template:
           now: "{{ now() }}"
-          dbus_names: '{{ mpris_bus_names }}'
+          mpris_dbus_names: '{{ mpris_bus_names }}'
+          bus_names: '{{ dbus_list("*") }}'
