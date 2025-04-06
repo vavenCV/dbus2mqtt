@@ -9,7 +9,6 @@ import dbus_next.introspection as dbus_introspection
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import (
-    DbusConfig,
     InterfaceConfig,
 )
 from dbus2mqtt.dbus.dbus_signal_processor import on_signal

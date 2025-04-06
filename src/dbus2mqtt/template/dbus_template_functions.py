@@ -1,8 +1,8 @@
 import fnmatch
 
-from dbus2mqtt.dbus.dbus_client import DbusClient
-
 from typing import Any
+
+from dbus2mqtt.dbus.dbus_client import DbusClient
 
 
 class DbusContext:

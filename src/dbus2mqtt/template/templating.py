@@ -1,6 +1,7 @@
 
-from typing import Any
 from datetime import datetime
+from typing import Any
+
 import yaml
 
 from jinja2 import (
@@ -8,25 +9,38 @@ from jinja2 import (
     Environment,
     StrictUndefined,
 )
+from yaml import SafeDumper, SafeLoader
 
-# class AnsibleCoreFiltersExtension(Extension):
 
-#     def __init__(self, environment):
-#         super().__init__(environment)
-#         filters = FilterModule().filters()
-#         for x in filters:
-#             if x in environment.filters:
-#                 warnings.warn("Filter name collision detected changing "
-#                               "filter name to ans_{0} "
-#                               "to avoid clobbering".format(x),
-#                               RuntimeWarning)
-#                 filters["ans_" + x] = filters[x]
-#                 del filters[x]
+def _represent_template_str(dumper: SafeDumper, data):
+    return dumper.represent_str(f"template:{data}:template")
 
-#         # Register provided filters
-#         environment.filters.update(filters)
-# def _now():
-#     return datetime.now()
+class _CustomSafeLoader(SafeLoader):
+    def __init__(self, stream):
+        super().__init__(stream)
+
+        # Disable parsing ISO date strings
+        self.add_constructor('tag:yaml.org,2002:timestamp', lambda _l, n: n.value)
+
+class _CustomSafeDumper(SafeDumper):
+    def __init__(self, stream, **kwargs):
+        super().__init__(stream, **kwargs)
+        self.add_representer(_TemplatedStr, _represent_template_str)
+
+class _TemplatedStr(str):
+    """A marker class to force template string formatting in YAML."""
+    pass
+
+def _mark_templates(obj):
+    if isinstance(obj, dict):
+        return {k: _mark_templates(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_mark_templates(v) for v in obj]
+    elif isinstance(obj, str):
+        s = obj.strip()
+        if s.startswith("{{") and s.endswith("}}"):
+            return _TemplatedStr(obj)
+    return obj
 
 class TemplateEngine:
     def __init__(self):
@@ -34,11 +48,11 @@ class TemplateEngine:
         engine_globals = {}
         engine_globals['now'] = datetime.now
 
-
         self.jinja2_env = Environment(
             loader=BaseLoader(),
             extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
-            undefined=StrictUndefined
+            undefined=StrictUndefined,
+            keep_trailing_newline=False
         )
 
         self.jinja2_async_env = Environment(
@@ -61,6 +75,17 @@ class TemplateEngine:
     def update_app_context(self, context: dict[str, Any]):
         self.app_context.update(context)
 
+    def _dict_to_templatable_str(self, value):
+        value = _mark_templates(value)
+        value = yaml.dump(value, Dumper=_CustomSafeDumper)
+        # value= yaml.safe_dump(value, default_style=None)
+        value = value.replace("template:{{", "{{").replace("}}:template", "}}")
+        # print(value)
+        return value
+
+    def _render_result_to_dict(self, value):
+        return yaml.load(value, _CustomSafeLoader)
+
     def render_template(self, template, context: dict[str, Any] = {}) -> Any:
 
         if not template:
@@ -68,13 +93,12 @@ class TemplateEngine:
 
         dict_template = isinstance(template, dict)
         if dict_template:
-            template = yaml.safe_dump(template, indent=2)
+            template = self._dict_to_templatable_str(template)
 
         res = self.jinja2_env.from_string(template).render(**context)
 
-        print(f"res={res}")
         if dict_template:
-            res = yaml.safe_load(res)
+            res = self._render_result_to_dict(res)
 
         return res
 
@@ -84,15 +108,12 @@ class TemplateEngine:
             return None
 
         dict_template = isinstance(template, dict)
-        print(f"original template: {template}")
         if dict_template:
-            template = yaml.safe_dump(template)
-            print(f"safe_dump template: {template}")
+            template = self._dict_to_templatable_str(template)
 
         res = await self.jinja2_async_env.from_string(template).render_async(**context)
 
         if dict_template:
-            print(f"res: {res}")
-            res = yaml.safe_load(res)
+            res = self._render_result_to_dict(res)
 
         return res

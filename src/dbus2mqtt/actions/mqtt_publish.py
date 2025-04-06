@@ -3,9 +3,8 @@ import logging
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import FlowActionMqttPublish
-from dbus2mqtt.mqtt.mqtt_client import MqttMessage
-from dbus2mqtt.event_broker import EventBroker
 from dbus2mqtt.flow import FlowAction, FlowExecutionContext
+from dbus2mqtt.mqtt.mqtt_client import MqttMessage
 
 logger = logging.getLogger(__name__)
 

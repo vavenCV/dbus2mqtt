@@ -11,8 +11,7 @@ from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.subscribeoptions import SubscribeOptions
 
 from dbus2mqtt import AppContext
-from dbus2mqtt.config import MqttConfig
-from dbus2mqtt.event_broker import EventBroker, MqttMessage
+from dbus2mqtt.event_broker import MqttMessage
 
 logger = logging.getLogger(__name__)
 

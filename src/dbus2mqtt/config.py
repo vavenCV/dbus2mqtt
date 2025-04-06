@@ -3,9 +3,9 @@ import fnmatch
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from dbus2mqtt.template.templating import TemplateEngine
-
 from pydantic import SecretStr
+
+from dbus2mqtt.template.templating import TemplateEngine
 
 
 @dataclass
