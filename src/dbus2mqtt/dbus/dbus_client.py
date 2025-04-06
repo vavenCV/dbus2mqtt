@@ -7,24 +7,27 @@ from queue import Empty
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
 
+from dbus2mqtt import AppContext
 from dbus2mqtt.config import (
     DbusConfig,
     InterfaceConfig,
 )
-from dbus2mqtt.dbus_signal_processor import on_signal
-from dbus2mqtt.dbus_types import BusNameSubscriptions
-from dbus2mqtt.dbus_util import camel_to_snake, unwrap_dbus_object
-from dbus2mqtt.event_broker import DbusSignalWithState, EventBroker, MqttMessage
+from dbus2mqtt.dbus.dbus_signal_processor import on_signal
+from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
+from dbus2mqtt.dbus.dbus_util import camel_to_snake, unwrap_dbus_object
+from dbus2mqtt.event_broker import DbusSignalWithState, MqttMessage
 
 logger = logging.getLogger(__name__)
 
 
 class DbusClient:
 
-    def __init__(self, config: DbusConfig, bus: dbus_aio.message_bus.MessageBus, event_broker: EventBroker):
-        self.config = config
+    def __init__(self, app_context: AppContext, bus: dbus_aio.message_bus.MessageBus):
+        self.app_context = app_context
+        self.config = app_context.config.dbus
+        self.event_broker = app_context.event_broker
+        self.templating = app_context.templating
         self.bus = bus
-        self.event_broker = event_broker
         self.subscriptions: dict[str, BusNameSubscriptions] = {}
 
     async def connect(self):
@@ -81,7 +84,10 @@ class DbusClient:
                 obj_interface.__getattribute__(on_signal_method_name)(
                     lambda a, b, c:
                         self.event_broker.on_dbus_signal(DbusSignalWithState(
-                            bus_name_subscriptions, path, interface.name, signal_handler_configs, args=[a, b, c]
+                            bus_name_subscriptions, path,
+                            interface.name,
+                            signal_handler_configs,
+                            args=[a, b, c]
                         ))
                 )
                 logger.info(f"subscribed with signal_handler: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
@@ -190,7 +196,7 @@ class DbusClient:
             signal = await self.event_broker.dbus_signal_queue.async_q.get()  # Wait for a message
             try:
                 await on_signal(
-                    self.event_broker,
+                    self.app_context,
                     signal.bus_name_subscriptions,
                     signal.path,
                     signal.interface_name,
@@ -213,7 +219,7 @@ class DbusClient:
         for subscription_configs in self.config.subscriptions:
             for interface_config in subscription_configs.interfaces:
                 # TODO, performance improvement
-                mqtt_topic = interface_config.render_mqtt_call_method_topic({})
+                mqtt_topic = interface_config.render_mqtt_call_method_topic(self.templating, {})
                 found_matching_topic |= mqtt_topic == msg.topic
 
         if not found_matching_topic:

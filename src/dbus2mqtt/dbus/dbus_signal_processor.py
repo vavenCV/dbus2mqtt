@@ -3,17 +3,21 @@ import logging
 
 from dbus_next.errors import DBusError
 
+from dbus2mqtt import AppContext
 from dbus2mqtt.config import (
     SignalHandlerConfig,
 )
-from dbus2mqtt.dbus_types import BusNameSubscriptions
-from dbus2mqtt.dbus_util import camel_to_snake, unwrap_dbus_object
-from dbus2mqtt.event_broker import EventBroker, MqttMessage
+from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
+from dbus2mqtt.dbus.dbus_util import camel_to_snake, unwrap_dbus_object
+from dbus2mqtt.event_broker import MqttMessage
 
 logger = logging.getLogger(__name__)
 
 
-async def on_signal(event_broker: EventBroker, bus_name_subscriptions: BusNameSubscriptions, path: str, interface_name: str, signal_handler_configs: list[SignalHandlerConfig], args):
+async def on_signal(app_context: AppContext, bus_name_subscriptions: BusNameSubscriptions, path: str, interface_name: str, signal_handler_configs: list[SignalHandlerConfig], args):
+
+    event_broker = app_context.event_broker
+    templating = app_context.templating
 
     bus_name = bus_name_subscriptions.bus_name
     proxy_object = bus_name_subscriptions.path_objects[path]
@@ -38,14 +42,17 @@ async def on_signal(event_broker: EventBroker, bus_name_subscriptions: BusNameSu
             }
 
             async_template_interface_context = {
-                "dbus_call": async_dbus_call_fn
+                "dbus_call": async_dbus_call_fn,
+                "dbus_list": None
             }
 
             try:
-                payload = await signal_handler_config.render_payload_template(unwrapped_args, context={
-                    **template_interface_context, **async_template_interface_context
+                payload = await signal_handler_config.render_payload_template(templating, context={
+                    "args": unwrapped_args,
+                    **template_interface_context,
+                    **async_template_interface_context
                 })
-                mqtt_topic = signal_handler_config.render_mqtt_topic(context=template_interface_context)
+                mqtt_topic = signal_handler_config.render_mqtt_topic(templating, template_interface_context)
             except DBusError as e:
                 logger.warning(f"Error rendering jinja template, DBusError: {e.text}")
                 return

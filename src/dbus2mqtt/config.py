@@ -1,29 +1,12 @@
 import fnmatch
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
-import yaml
+from dbus2mqtt.template.templating import TemplateEngine
 
-from jinja2 import (
-    BaseLoader,
-    Environment,
-    StrictUndefined,
-)
 from pydantic import SecretStr
 
-jinja2_env = Environment(
-    loader=BaseLoader(),
-    extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
-    undefined=StrictUndefined
-)
-
-jinja2_async_env = Environment(
-    loader=BaseLoader(),
-    extensions=['jinja2_ansible_filters.AnsibleCoreFiltersExtension'],
-    undefined=StrictUndefined,
-    enable_async=True
-)
 
 @dataclass
 class SignalHandlerConfig:
@@ -32,24 +15,15 @@ class SignalHandlerConfig:
     payload_template: str | dict[str, Any]
     mqtt_topic: str
 
-    def matches_filter(self, *args) -> bool:
-        res = jinja2_env.from_string(self.filter).render(args=args)
+    def matches_filter(self, template_engine: TemplateEngine, *args) -> bool:
+        res = template_engine.render_template(self.filter, { "args": args })
         return res == "True"
 
-    async def render_payload_template(self, args, context: dict[str, Any]) -> Any:
-        # print(f"a: {self.payload_template}, args={args}")
-        template = self.payload_template
-        dict_template = isinstance(template, dict)
-        if dict_template:
-            template = yaml.safe_dump(template)
+    async def render_payload_template(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
+        return await template_engine.async_render_template(self.payload_template, context)
 
-        rendered = await jinja2_async_env.from_string(template).render_async(args=args, **context)
-        rendered = yaml.safe_load(rendered)
-
-        return rendered
-
-    def render_mqtt_topic(self, context: dict[str, Any]) -> Any:
-        return jinja2_env.from_string(self.mqtt_topic).render(**context)
+    def render_mqtt_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
+        return template_engine.render_template(self.mqtt_topic, context)
 
 @dataclass
 class MethodConfig:
@@ -77,16 +51,57 @@ class InterfaceConfig:
 
         return res
 
-    def render_mqtt_call_method_topic(self, context: dict[str, Any]) -> Any:
-        if self.mqtt_call_method_topic:
-            return jinja2_env.from_string(self.mqtt_call_method_topic).render(**context)
-        return None
+    def render_mqtt_call_method_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
+        return template_engine.render_template(self.mqtt_call_method_topic, context)
+
+@dataclass
+class FlowTriggerMqttConfig:
+    type: Literal["mqtt"]
+    topic: str
+    filter: str | None = None
+
+@dataclass
+class FlowTriggerScheduleConfig:
+    type: Literal["schedule"]
+    cron: dict[str, Any] | None = None
+    interval: dict[str, Any] | None = None
+
+@dataclass
+class FlowTriggerDbusSignalConfig:
+    type: Literal["dbus_signal"]
+    bus_name: str
+    path: str
+    interface: str
+    signal: str
+
+FlowTriggerConfig = FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig
+
+@dataclass
+class FlowActionContextSet:
+    type: Literal["context_set"]
+    context: dict[str, Any] | None = None
+    global_context: dict[str, Any] | None = None
+
+@dataclass
+class FlowActionMqttPublish:
+    type: Literal["mqtt_publish"]
+    topic: str
+    payload_template: str | dict[str, Any]
+
+FlowActionConfig = FlowActionMqttPublish | FlowActionContextSet
+
+@dataclass
+class FlowConfig:
+    name: str
+    triggers: list[FlowTriggerConfig]
+    actions: list[FlowActionConfig]
 
 @dataclass
 class SubscriptionConfig:
     bus_name: str
     path: str
     interfaces: list[InterfaceConfig] = field(default_factory=list)
+    flows: list[FlowConfig] = field(default_factory=list)
 
 @dataclass
 class DbusConfig:
@@ -117,3 +132,4 @@ class MqttConfig:
 class Config:
     mqtt: MqttConfig
     dbus: DbusConfig
+    flows: list[FlowConfig] = field(default_factory=list)

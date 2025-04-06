@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.subscribeoptions import SubscribeOptions
 
+from dbus2mqtt import AppContext
 from dbus2mqtt.config import MqttConfig
 from dbus2mqtt.event_broker import EventBroker, MqttMessage
 
@@ -17,16 +18,15 @@ logger = logging.getLogger(__name__)
 
 class MqttClient:
 
-    def __init__(self, config: MqttConfig, event_broker: EventBroker):
-        self.config = config
-        self.event_broker = event_broker
-        # self.mqtt_msg_handler = mqtt_msg_handler
+    def __init__(self, app_context: AppContext):
+        self.config = app_context.config.mqtt
+        self.event_broker = app_context.event_broker
 
         self.client = mqtt.Client(CallbackAPIVersion.VERSION2)
 
         self.client.username_pw_set(
-            username=config.username,
-            password=config.password.get_secret_value()
+            username=self.config.username,
+            password=self.config.password.get_secret_value()
         )
 
         self.client.on_connect = self.on_connect
