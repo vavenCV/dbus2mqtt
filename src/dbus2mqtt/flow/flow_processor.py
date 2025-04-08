@@ -9,7 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dbus2mqtt import AppContext
 from dbus2mqtt.actions.context_set import ContextSetAction
 from dbus2mqtt.actions.mqtt_publish import MqttPublishAction
-from dbus2mqtt.config import FlowTriggerConfig
+from dbus2mqtt.config import FlowConfig, FlowTriggerConfig
 from dbus2mqtt.event_broker import FlowTriggerMessage
 from dbus2mqtt.flow import FlowAction, FlowExecutionContext
 
@@ -20,6 +20,7 @@ class FlowScheduler:
     def __init__(self, app_context: AppContext):
         self.config = app_context.config
         self.event_broker = app_context.event_broker
+        self.scheduler = AsyncIOScheduler()
 
     async def flow_strigger(self, flow, trigger_config: FlowTriggerConfig):
         trigger = FlowTriggerMessage(flow, trigger_config, datetime.now())
@@ -27,21 +28,33 @@ class FlowScheduler:
 
     async def scheduler_task(self):
 
-        scheduler = AsyncIOScheduler()
+        self.scheduler.start()
 
-        for flow in self.config.flows:
-            for trigger in flow.triggers:
-                if trigger.type == "schedule":
-                    if trigger.interval:
-                        # Each schedule gets its own job
-                        scheduler.add_job(self.flow_strigger, "interval", args=[flow, trigger], **trigger.interval)
-                    elif trigger.cron:
-                        # Each schedule gets its own job
-                        scheduler.add_job(self.flow_strigger, "cron", args=[flow, trigger], **trigger.cron)
+        # configure global flow trigger
+        self.start_flow_set(self.config.flows)
 
-        scheduler.start()
         while True:
             await asyncio.sleep(1000)
+
+    def start_flow_set(self, flows: list[FlowConfig]):
+        for flow in flows:
+            for trigger in flow.triggers:
+                existing_job = self.scheduler.get_job(trigger.id)
+                if not existing_job and trigger.type == "schedule":
+                    logger.info(f"Starting flow scheduler id={trigger.id}")
+                    if trigger.interval:
+                        # Each schedule gets its own job
+                        self.scheduler.add_job(self.flow_strigger, "interval", id=trigger.id, args=[flow, trigger], **trigger.interval)
+                    elif trigger.cron:
+                        # Each schedule gets its own job
+                        self.scheduler.add_job(self.flow_strigger, "cron", id=trigger.id, args=[flow, trigger], **trigger.cron)
+
+    def stop_flow_set(self, flows):
+        for flow in flows:
+            for trigger in flow.triggers:
+                if trigger.type == "schedule":
+                    logger.info(f"Stopping flow scheduler id={trigger.id}")
+                    self.scheduler.remove_job(trigger.id)
 
 class FlowProcessor:
 

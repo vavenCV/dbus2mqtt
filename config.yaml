@@ -134,7 +134,7 @@ flows:
   - name: "Publish dbus2mqtt state"
     triggers:
       - type: schedule
-        interval: { seconds: 1 }
+        interval: { seconds: 10 }
     actions:
       - type: context_set
         context:

@@ -1,4 +1,5 @@
 import fnmatch
+import uuid
 
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -63,6 +64,7 @@ class FlowTriggerMqttConfig:
 @dataclass
 class FlowTriggerScheduleConfig:
     type: Literal["schedule"]
+    id: str = field(default_factory=lambda: uuid.uuid4().hex)
     cron: dict[str, Any] | None = None
     interval: dict[str, Any] | None = None
 

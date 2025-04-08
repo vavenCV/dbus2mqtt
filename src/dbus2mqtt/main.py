@@ -21,11 +21,11 @@ from dbus2mqtt.template.templating import TemplateEngine
 logger = logging.getLogger(__name__)
 
 
-async def dbus_processor_task(app_context: AppContext):
+async def dbus_processor_task(app_context: AppContext, flow_scheduler: FlowScheduler):
 
     bus = dbus_aio.message_bus.MessageBus()
 
-    dbus_client = DbusClient(app_context, bus)
+    dbus_client = DbusClient(app_context, bus, flow_scheduler)
     app_context.templating.add_functions(jinja_custom_dbus_functions(dbus_client))
 
     await dbus_client.connect()
@@ -65,14 +65,6 @@ async def flow_processor_task(app_context: AppContext):
         asyncio.create_task(flow_processor.flow_processor_task())
     )
 
-async def flow_scheduler_task(app_context: AppContext):
-
-    flow_scheduler = FlowScheduler(app_context)
-
-    await asyncio.gather(
-        asyncio.create_task(flow_scheduler.scheduler_task())
-    )
-
 async def run(config: Config):
 
     event_broker = EventBroker()
@@ -80,12 +72,14 @@ async def run(config: Config):
 
     app_context = AppContext(config, event_broker, template_engine)
 
+    flow_scheduler = FlowScheduler(app_context)
+
     try:
         await asyncio.gather(
-            dbus_processor_task(app_context),
+            dbus_processor_task(app_context, flow_scheduler),
             mqtt_processor_task(app_context),
             flow_processor_task(app_context),
-            flow_scheduler_task(app_context)
+            asyncio.create_task(flow_scheduler.scheduler_task())
         )
     except asyncio.CancelledError:
         pass
@@ -117,26 +111,3 @@ def main():
     logger.debug(f"config: {config}")
 
     asyncio.run(run(config))
-#     loop = asyncio.new_event_loop()
-#     asyncio.set_event_loop(loop)
-
-#     # Handle Ctrl+C gracefully
-#     for sig in (signal.SIGINT, signal.SIGTERM):
-#         loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown(loop)))
-
-#     try:
-#         loop.run_until_complete(run(config))
-#     except asyncio.CancelledError:
-#         pass
-#     finally:
-#         loop.run_until_complete(loop.shutdown_asyncgens())
-#         loop.close()
-
-# async def shutdown(loop):
-#     logger.info("Shutting down event loop...")
-#     tasks = asyncio.all_tasks() - {asyncio.current_task()}
-#     for task in tasks:
-#         task.cancel()
-#     results = await asyncio.gather(*tasks, return_exceptions=True)
-#     logger.info(f"Sucessfully stopped {len(results)} tasks")
-#     loop.stop()
