@@ -32,4 +32,4 @@ class MqttPublishAction(FlowAction):
 
         logger.debug(f"public_mqtt: context={context.name}, payload={payload}")
 
-        await self.event_broker.publish_to_mqtt(MqttMessage(mqtt_topic, payload))
+        await self.event_broker.publish_to_mqtt(MqttMessage(mqtt_topic, payload, payload_serialization_type=self.config.payload_type))

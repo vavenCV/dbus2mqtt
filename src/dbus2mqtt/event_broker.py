@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 class MqttMessage:
     topic: str
     payload: Any
+    payload_serialization_type: str = "json"
 
 @dataclass
 class DbusSignalWithState:

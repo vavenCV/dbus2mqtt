@@ -134,18 +134,15 @@ flows:
   - name: "Publish dbus2mqtt state"
     triggers:
       - type: schedule
-        interval: { seconds: 10 }
+        interval: { seconds: 1 }
     actions:
       - type: context_set
         context:
           mpris_bus_names: '{{ dbus_list("org.mpris.MediaPlayer2.*") }}'
       - type: mqtt_publish
         topic: dbus2mqtt/subscriptions/state
-        # payload_yaml_template
-        # payload_json_template
-        # payload_text_template
-        # payload_type: yaml/json/text
-        payload_template:
+        payload_type: json
+        payload_template: |
           now: "{{ now() }}"
           mpris_dbus_names: '{{ mpris_bus_names }}'
           bus_names: '{{ dbus_list("*") }}'

@@ -82,7 +82,7 @@ class TemplateEngine:
         value = _mark_templates(value)
         value = yaml.dump(value, Dumper=_CustomSafeDumper)
         # value= yaml.safe_dump(value, default_style=None)
-        print(f"_dict_to_templatable_str: {value}")
+        # print(f"_dict_to_templatable_str: {value}")
         value = value.replace("template:{{", "{{").replace("}}:template", "}}")
         # print(value)
         return value
