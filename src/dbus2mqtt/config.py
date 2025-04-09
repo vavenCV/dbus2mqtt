@@ -89,6 +89,8 @@ class FlowActionMqttPublish:
     type: Literal["mqtt_publish"]
     topic: str
     payload_template: str | dict[str, Any]
+    """should be a dict if payload_type is json/yaml
+    or a string if payload_type is text"""
     payload_type: Literal["json", "yaml", "text"] = "json"
 
 FlowActionConfig = FlowActionMqttPublish | FlowActionContextSet
@@ -98,6 +100,7 @@ class FlowConfig:
     name: str
     triggers: list[FlowTriggerConfig]
     actions: list[FlowActionConfig]
+    id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
 @dataclass
 class SubscriptionConfig:

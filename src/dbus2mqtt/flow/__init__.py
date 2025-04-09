@@ -4,19 +4,25 @@ from typing import Any
 
 class FlowExecutionContext:
 
-    def __init__(self, name: str, global_flow_context: dict[str, Any]):
+    def __init__(self, name: str, global_flows_context: dict[str, Any], flow_context: dict[str, Any]):
         self.name = name
-        self.global_flow_context = global_flow_context
+        self.global_flows_context = global_flows_context
+        self.flow_context = flow_context
+
+        # per flow execution context
         self.context: dict[str, Any] = {}
 
-    def get_aggregated_context(self):
+    def get_aggregated_context(self) -> dict[str, Any]:
+        """Get the aggregated context for the flow execution."""
+        # Merge global flows context, flow context, and local context
         context = {}
-        if self.global_flow_context:
-            context.update(self.global_flow_context)
+        if self.global_flows_context:
+            context.update(self.global_flows_context)
+        if self.flow_context:
+            context.update(self.flow_context)
         if self.context:
             context.update(self.context)
         return context
-
 
 class FlowAction(ABC):
 

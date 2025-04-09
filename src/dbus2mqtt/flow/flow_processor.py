@@ -58,47 +58,91 @@ class FlowScheduler:
                     logger.info(f"Stopping flow scheduler id={trigger.id}")
                     self.scheduler.remove_job(trigger.id)
 
+class FlowActionContext:
+
+    def __init__(self, app_context: AppContext, flow_config: FlowConfig, global_flows_context: dict[str, Any], flow_context: dict[str, Any]):
+        self.app_context = app_context
+        self.global_flows_context = global_flows_context
+        self.flow_context = flow_context
+        self.flow_config = flow_config
+
+        self.flow_actions = self._setup_flow_actions()
+
+    def _setup_flow_actions(self) -> list[FlowAction]:
+
+        res = []
+        for action_config in self.flow_config.actions:
+            action = None
+            if action_config.type == "context_set":
+                action = ContextSetAction(action_config, self.app_context)
+            if action_config.type == "mqtt_publish":
+                action = MqttPublishAction(action_config, self.app_context)
+            if action:
+                res.append(action)
+
+        return res
+
+    async def execute_actions(self):
+
+        # per flow execution context
+        context = FlowExecutionContext(
+            self.flow_config.name,
+            global_flows_context=self.global_flows_context,
+            flow_context=self.flow_context)
+
+        for action in self.flow_actions:
+            await action.execute(context)
+
 class FlowProcessor:
 
     def __init__(self, app_context: AppContext):
         self.app_context = app_context
-        self.config = app_context.config
+        self.global_flows_context = app_context.config
         self.event_broker = app_context.event_broker
 
-        self._global_flow_context: dict[str, Any] = {}
-        self._flow_actions = self._setup_flow_actions()
+        self._global_context: dict[str, Any] = {}
 
-    def _setup_flow_actions(self) -> dict[str, list[FlowAction]]:
-        res: dict[str, list[FlowAction]] = {}
-        for flow_config in self.config.flows:
-            res[flow_config.name] = []
-            for action_config in flow_config.actions:
-                action = None
-                if action_config.type == "context_set":
-                    action = ContextSetAction(action_config, self.app_context)
-                if action_config.type == "mqtt_publish":
-                    action = MqttPublishAction(action_config, self.app_context)
-                if action:
-                    res[flow_config.name].append(action)
+        self._flows: dict[str, FlowActionContext] = {}
 
-        return res
+        # register global flows
+        self.register_flows(app_context.config.flows)
+
+        # register dbus subscription flows
+        for subscription in app_context.config.dbus.subscriptions:
+            flow_context = {
+                "subscription_bus_name": subscription.bus_name,
+                "subscription_path": subscription.path,
+                "subscription_interfaces": [i.interface for i in subscription.interfaces],
+            }
+            self.register_flows(subscription.flows, flow_context)
+
+    def register_flows(self, flows: list[FlowConfig], flow_context: dict[str, Any] = {}):
+        """Register flows with the flow processor."""
+
+        for flow_config in flows:
+            flow_action_context = FlowActionContext(
+                self.app_context,
+                flow_config,
+                self._global_context,
+                flow_context
+            )
+            self._flows[flow_config.id] = flow_action_context
 
     async def flow_processor_task(self):
         """Continuously processes messages from the async queue."""
 
-        logger.info(f"flow_processor_task: configuring flows={[f.name for f in self.config.flows]}")
+        # logger.info(f"flow_processor_task: configuring flows={[f.name for f in self.config.flows]}")
 
         while True:
             flow_trigger_message = await self.event_broker.flow_trigger_queue.async_q.get()  # Wait for a message
             try:
                 logger.info(f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}")
 
-                flow_name = flow_trigger_message.flow_config.name
-                context = FlowExecutionContext(name="global", global_flow_context=self._global_flow_context)
+                flow_id = flow_trigger_message.flow_config.id
+                # flow_name = flow_trigger_message.flow_config.name
 
-                flow_actions = self._flow_actions[flow_name]
-                for action in flow_actions:
-                    await action.execute(context)
+                flow = self._flows[flow_id]
+                await flow.execute_actions()
 
             except Exception as e:
                 logger.warning(f"dbus_signal_queue_processor_task: Exception {e}", exc_info=True)

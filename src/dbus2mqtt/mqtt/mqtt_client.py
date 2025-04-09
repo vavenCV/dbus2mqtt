@@ -55,13 +55,13 @@ class MqttClient:
             try:
                 payload = msg.payload
                 type = msg.payload_serialization_type
-                if type == "json":
-                    payload = json.dumps(msg.payload)
-                elif type == "yaml":
-                    payload = yaml.dump(msg.payload)
+                if isinstance(msg.payload, dict):
+                    if type == "json":
+                        payload = json.dumps(msg.payload)
+                    elif type == "yaml":
+                        payload = yaml.dump(msg.payload)
                 elif type == "text":
-                    if isinstance(msg.payload, dict):
-                        payload = yaml.safe_dump(payload)
+                    payload = str(payload)
 
                 logger.debug(f"mqtt_publish_queue_processor_task: payload={payload}")
                 self.client.publish(topic=msg.topic, payload=payload)
