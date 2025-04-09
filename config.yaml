@@ -65,16 +65,16 @@ dbus:
             # - type: mqtt
             #   topic: "sensor/input"
             - type: schedule
-              interval: { seconds: 1 }
+              interval: {seconds: 1}
               # condition: "{{ dbus_list('org.mpris.MediaPlayer2.*') | list | length > 0 }}"
 
               # cron: { second: "*" }
-            # - type: dbus_signal
-            # #   bus_name: "org.freedesktop.Notifications"
-            # #   path: "/org/freedesktop/Notifications"
-            #   interface: "org.freedesktop.Notifications"
-            #   signal: "NotificationClosed"
-            #   # filter: ""
+              # - type: dbus_signal
+              # #   bus_name: "org.freedesktop.Notifications"
+              # #   path: "/org/freedesktop/Notifications"
+              #   interface: "org.freedesktop.Notifications"
+              #   signal: "NotificationClosed"
+              #   # filter: ""
           # template_context:
           #   active_mpris_player_bus_name: "{{ global.active_mpris_player_bus_name }}"
           # dbus_context:
@@ -84,7 +84,7 @@ dbus:
           #   active_bus_name_selector:
           #     - type: dbus_signal_context
           #     # - type: property_value
-          #     #   expression: org.mpris.MediaPlayer2.Player:PlaybackStatus == Playing 
+          #     #   expression: org.mpris.MediaPlayer2.Player:PlaybackStatus == Playing
           #       # interface: org.mpris.MediaPlayer2.Player
           #       # property: PlaybackStatus
           #       # value: Playing
@@ -123,7 +123,7 @@ flows:
   - name: "Publish dbus2mqtt state"
     triggers:
       - type: schedule
-        interval: { seconds: 10 }
+        interval: {seconds: 10}
     actions:
       - type: context_set
         context:
