@@ -10,11 +10,9 @@ from dbus2mqtt.template.templating import TemplateEngine
 
 
 @dataclass
-class SignalHandlerConfig:
+class SignalConfig:
     signal: str
-    filter: str
-    payload_template: str | dict[str, Any]
-    mqtt_topic: str
+    filter: str | None = None
 
     def matches_filter(self, template_engine: TemplateEngine, *args) -> bool:
         res = template_engine.render_template(self.filter, { "args": args })
@@ -38,19 +36,9 @@ class PropertyConfig:
 class InterfaceConfig:
     interface: str
     mqtt_call_method_topic: str | None
-    signal_handlers: list[SignalHandlerConfig] = field(default_factory=list)
+    signals: list[SignalConfig] = field(default_factory=list)
     methods: list[MethodConfig] = field(default_factory=list)
     properties: list[PropertyConfig] = field(default_factory=list)
-
-    def signal_handlers_by_signal(self) -> dict[str, list[SignalHandlerConfig]]:
-        res: dict[str, list[SignalHandlerConfig]] = {}
-
-        for handler in self.signal_handlers:
-            if handler.signal not in res:
-                res[handler.signal] = []
-            res[handler.signal].append(handler)
-
-        return res
 
     def render_mqtt_call_method_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
         return template_engine.render_template(self.mqtt_call_method_topic, context)
@@ -71,10 +59,11 @@ class FlowTriggerScheduleConfig:
 @dataclass
 class FlowTriggerDbusSignalConfig:
     type: Literal["dbus_signal"]
-    bus_name: str
-    path: str
     interface: str
     signal: str
+    bus_name: str | None = None
+    path: str | None = None
+    filter: str | None = None
 
 FlowTriggerConfig = FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig
 

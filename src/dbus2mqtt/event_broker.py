@@ -7,7 +7,12 @@ from typing import Any
 
 import janus
 
-from dbus2mqtt.config import FlowConfig, FlowTriggerConfig, SignalHandlerConfig
+from dbus2mqtt.config import (
+    FlowConfig,
+    FlowTriggerConfig,
+    SignalConfig,
+    SubscriptionConfig,
+)
 from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
 
 logger = logging.getLogger(__name__)
@@ -24,7 +29,8 @@ class DbusSignalWithState:
     bus_name_subscriptions: BusNameSubscriptions
     path: str
     interface_name: str
-    signal_handler_configs: list[SignalHandlerConfig]
+    subscription_config: SubscriptionConfig
+    signal_config: SignalConfig
     args: list[Any]
 
 @dataclass
@@ -32,6 +38,7 @@ class FlowTriggerMessage:
     flow_config: FlowConfig
     flow_trigger_config: FlowTriggerConfig
     timestamp: datetime
+    context: dict[str, Any] | None = None
 
 class EventBroker:
     def __init__(self):

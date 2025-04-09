@@ -11,34 +11,22 @@ dbus:
       # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
-          # signals:
-          #     # with no postprocessing, just use handlers otherwise
-          #   - signal: PropertiesChanged  # simple forwarding of signal to mqtt
-          #     mqtt_signal_topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
-          signal_handlers:
-            # TODO: allow for trigger by timer
-            # Position property updates do not trigger a PropertiesChange event
+          signals:
             - signal: PropertiesChanged
-              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' && dbus_property('org.mpris.MediaPlayer2.Player') }}"
-              # global_template_context:
-              #   # active_mpris_player: {{ dbus_call('org.freedesktop.DBus.Properties', 'Get', 'org.mpris.MediaPlayer2.Player', 'PlaybackStatus') }}
-              #   active_mpris_player_bus_name: "{{ bus_name }}"  # signal.sender
-              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state2
-              payload_template: |
-                interface_name: {{ args[0] }}
-            # - signal: PropertiesChanged
-            #   filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
-            #   payload_template: |
-            #     interface_name: {{ args[0] }}
-            #     changed_properties:
-            #       {{ args[1] | to_nice_yaml | indent(2) }}
-            #     invalidated_properties: {{ args[2] }}
-            #     properties:
-            #       {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2') }}
-            #     player_properties:
-            #       {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
-            #   # mqtt_topic: dbus2mqtt/{{ bus_name }}/state
-            #   mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+
+              # shorthand notation for flow
+              # actions:
+              #   - type: mqtt_publish
+              #     topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
+              #     payload_type: json
+              #     payload_template: |
+              #       bus_name: {{ bus_name }}
+              #       interface_name: {{ args[0] }}
+              #       changed_properties:
+              #         {{ args[1] | to_nice_yaml | indent(2) }}
+              #       invalidated_properties: {{ args[2] }}
+
           methods:
             - method: GetAll
 
@@ -72,7 +60,7 @@ dbus:
         #       filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
         #   global_template_context:
         #     active_mpris_player: "{{ dbus_signal.args[0] }}"  # sets active bus_name
-        - name: "MPRIS publish state"
+        - name: "MPRIS publish state on schedule"
           triggers:
             # - type: mqtt
             #   topic: "sensor/input"
@@ -105,32 +93,32 @@ dbus:
             - type: context_set
               # global_context:
               context:
-                mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first | default(none) }}'
-                # mpris_bus_name: "{{ dbus_list('org.mpris.MediaPlayer2.*') | last }}"
-                # mpris_bus_name: "{{ dbus_list('org.mpris.MediaPlayer2.*') | last_seen }}"
-                # mpris_bus_name: "{{ dbus_list('org.mpris.MediaPlayer2.*') | property(PlaybackStatus, Playing) }}"
-                # mpris_bus_name: "{{ get_preferred_mpris('org.mpris.MediaPlayer2.*') | first }}"
+                # usfull jinja filters for mpris: first, last, last_seen, property(PlaybackStatus, Playing)
+                mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
+                path: /org/mpris/MediaPlayer2
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
-              # bus_name: defaults to <subscription>
-              # path: defaults to <subscription>
               payload_type: json
               payload_template: |
-                {{ dbus_call(mpris_bus_name, '/org/mpris/MediaPlayer2', 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_json }}
-            # - type: mqtt_publish
-            #   topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
-            #   # bus_name: defaults to <subscription>
-            #   # path: defaults to <subscription>
-            #   payload_template: |
-            #     interface_name: {{ args[0] }}
-            #     changed_properties:
-            #       {{ args[1] | to_nice_yaml | indent(2) }}
-            #     invalidated_properties: {{ args[2] }}
-            #     properties:
-            #       {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2') }}
-            #     player_properties:
-            #       {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
-
+                {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_json }}
+        - name: "MPRIS signal to mqtt"
+          triggers:
+            - type: dbus_signal
+              # bus_name: org.mpris.MediaPlayer2.*
+              # path: /org/mpris/MediaPlayer2
+              interface: org.freedesktop.DBus.Properties
+              signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+          actions:
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
+              payload_type: json
+              payload_template:
+                bus_name: "{{ bus_name }}"
+                interface_name: "{{ args[0] }}"
+                changed_properties: |
+                  {{ args[1] | to_nice_yaml | indent(2) }}
+                invalidated_properties: "{{ args[2] }}"
 flows:
   - name: "Publish dbus2mqtt state"
     triggers:

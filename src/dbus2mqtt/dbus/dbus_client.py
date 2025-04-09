@@ -1,16 +1,17 @@
 import json
 import logging
 
+from datetime import datetime
+
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import InterfaceConfig, SubscriptionConfig
-from dbus2mqtt.dbus.dbus_signal_processor import on_signal
 from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
 from dbus2mqtt.dbus.dbus_util import camel_to_snake, unwrap_dbus_object
 from dbus2mqtt.event_broker import DbusSignalWithState, MqttMessage
-from dbus2mqtt.flow.flow_processor import FlowScheduler
+from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +74,7 @@ class DbusClient:
 
         return proxy_object, bus_name_subscriptions
 
-    async def _subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, si: InterfaceConfig):
+    async def _subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, subscription_config: SubscriptionConfig, si: InterfaceConfig):
 
         proxy_object, bus_name_subscriptions = self._ensure_proxy_object_subscription(bus_name, path, introspection)
         obj_interface = proxy_object.get_interface(interface.name)
@@ -82,24 +83,25 @@ class DbusClient:
 
         logger.debug(f"subscribe: bus_name={bus_name}, path={path}, interface={interface.name}, proxy_interface: signals={list(interface_signals.keys())}")
 
-        for [signal_name, signal_handler_configs] in si.signal_handlers_by_signal().items():
-            interface_signal = interface_signals.get(signal_name)
+        for signal_config in si.signals:
+            interface_signal = interface_signals.get(signal_config.signal)
             if interface_signal:
 
-                on_signal_method_name = "on_" + camel_to_snake(signal_name)
+                on_signal_method_name = "on_" + camel_to_snake(signal_config.signal)
                 obj_interface.__getattribute__(on_signal_method_name)(
                     lambda a, b, c:
                         self.event_broker.on_dbus_signal(DbusSignalWithState(
                             bus_name_subscriptions, path,
                             interface.name,
-                            signal_handler_configs,
+                            subscription_config,
+                            signal_config,
                             args=[a, b, c]
                         ))
                 )
-                logger.info(f"subscribed with signal_handler: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
+                logger.info(f"subscribed with signal_handler: signal={signal_config.signal}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
             else:
-                logger.warning(f"Invalid signal: signal={signal_name}, bus_name={bus_name}, path={path}, interface={interface.name}")
+                logger.warning(f"Invalid signal: signal={signal_config.signal}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
 
     async def _process_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface) -> list[tuple[InterfaceConfig, SubscriptionConfig]]:
@@ -112,7 +114,7 @@ class DbusClient:
             for subscription_interface in subscription.interfaces:
                 if subscription_interface.interface == interface.name:
                     logger.debug(f"matching config found for bus_name={bus_name}, path={path}, interface={interface.name}")
-                    await self._subscribe_interface(bus_name, path, introspection, interface, subscription_interface)
+                    await self._subscribe_interface(bus_name, path, introspection, interface, subscription, subscription_interface)
 
                     new_subscriptions.append((subscription_interface, subscription))
 
@@ -238,20 +240,36 @@ class DbusClient:
         """Continuously processes messages from the async queue."""
         while True:
             signal = await self.event_broker.dbus_signal_queue.async_q.get()  # Wait for a message
-            try:
-                await on_signal(
-                    self.app_context,
-                    signal.bus_name_subscriptions,
-                    signal.path,
-                    signal.interface_name,
-                    signal.signal_handler_configs,
-                    signal.args
-                )
-            except Exception as e:
-                logger.warning(f"dbus_signal_queue_processor_task: Exception {e}", exc_info=True)
-            finally:
-                self.event_broker.dbus_signal_queue.async_q.task_done()
 
+            for flow in signal.subscription_config.flows:
+                for trigger in flow.triggers:
+                    if trigger.type == "dbus_signal" and signal.signal_config.signal == trigger.signal:
+
+                        try:
+
+                            unwrapped_args = [unwrap_dbus_object(o) for o in signal.args]
+                            matches_filter = signal.signal_config.matches_filter(self.app_context.templating, *unwrapped_args)
+
+                            if matches_filter:
+                                context = {
+                                    "bus_name": signal.bus_name_subscriptions.bus_name,
+                                    "path": signal.path,
+                                    "interface": signal.interface_name,
+                                    "args": unwrapped_args,
+                                }
+                                trigger_message = FlowTriggerMessage(flow, trigger, datetime.now(), context)
+                                print("XXXXXXXXXXXXX")
+                                # log_msg = f"on_signal: signal={signal_handler_config.signal}, bus_name={bus_name}, path={path}, interface={interface_name}"
+                                # if logger.isEnabledFor(logging.DEBUG):
+                                #     logger.debug(f"{log_msg}, payload={payload}")
+                                # else:
+                                #     logger.info(log_msg)
+
+                                await self.event_broker.flow_trigger_queue.async_q.put(trigger_message)
+                        except Exception as e:
+                            logger.warning(f"dbus_signal_queue_processor_task: Exception {e}", exc_info=True)
+                        finally:
+                            self.event_broker.dbus_signal_queue.async_q.task_done()
 
     async def _on_mqtt_msg(self, msg: MqttMessage):
         # self.queue.put({
