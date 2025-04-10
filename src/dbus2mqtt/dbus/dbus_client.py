@@ -225,6 +225,18 @@ class DbusClient:
 
         return res
 
+    async def get_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str):
+
+        call_method_name = "get_" + camel_to_snake(property)
+        res = await interface.__getattribute__(call_method_name)()
+
+        if res:
+            res = unwrap_dbus_object(res)
+
+        logger.debug(f"get_dbus_interface_property: bus_name={interface.bus_name}, interface={interface.introspection.name}, property={property}, res={res}")
+
+        return res
+
     async def mqtt_receive_queue_processor_task(self):
         """Continuously processes messages from the async queue."""
         while True:
@@ -304,8 +316,14 @@ class DbusClient:
                             if method.method == payload_method:
                                 interface = proxy_object.get_interface(name=interface_config.interface)
 
-                                await self.call_dbus_interface_method(interface, method.method, payload_method_args)
-                                calls_done.append(method.method)
+                                try:
+                                    logger.info(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
+                                    await self.call_dbus_interface_method(interface, method.method, payload_method_args)
+                                    calls_done.append(method.method)
+                                except Exception as e:
+                                    logger.warning(f"on_mqtt_msg: method={method.method}, bus_name={bus_name} failed, exception={e}")
+
+                                    continue
 
         if len(calls_done) == 0:
             logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")

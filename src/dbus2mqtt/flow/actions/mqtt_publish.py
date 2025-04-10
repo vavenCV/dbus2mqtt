@@ -22,8 +22,10 @@ class MqttPublishAction(FlowAction):
         render_context = context.get_aggregated_context()
 
         try:
-            mqtt_topic = await self.templating.async_render_template(self.config.topic, render_context)
-            payload = await self.templating.async_render_template(self.config.payload_template, render_context)
+            mqtt_topic = await self.templating.async_render_template(self.config.topic, str, render_context)
+
+            payload_res_type = str if self.config.payload_type == "test" else dict
+            payload = await self.templating.async_render_template(self.config.payload_template, payload_res_type, render_context)
 
         except TemplateRuntimeError as e:
             logger.warning(f"Error rendering jinja template, flow: '{context.name}', error: {str(e)}. render_context={render_context}", exc_info=True)

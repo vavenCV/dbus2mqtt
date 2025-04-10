@@ -65,9 +65,11 @@ dbus:
             # - type: mqtt
             #   topic: "sensor/input"
             - type: schedule
-              interval: {seconds: 1}
-              # condition: "{{ dbus_list('org.mpris.MediaPlayer2.*') | list | length > 0 }}"
-
+              interval: {seconds: 5}
+            - type: dbus_signal
+              interface: org.freedesktop.DBus.Properties
+              signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
               # cron: { second: "*" }
               # - type: dbus_signal
               # #   bus_name: "org.freedesktop.Notifications"
@@ -100,7 +102,8 @@ dbus:
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
               payload_type: json
               payload_template: |
-                {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_json }}
+                bus_name: {{ mpris_bus_name }}
+                {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
         - name: "MPRIS signal to mqtt"
           triggers:
             - type: dbus_signal
@@ -119,19 +122,19 @@ dbus:
                 changed_properties: |
                   {{ args[1] | to_nice_yaml | indent(2) }}
                 invalidated_properties: "{{ args[2] }}"
-flows:
-  - name: "Publish dbus2mqtt state"
-    triggers:
-      - type: schedule
-        interval: {seconds: 10}
-    actions:
-      - type: context_set
-        context:
-          mpris_bus_names: '{{ dbus_list("*") }}'
-      - type: mqtt_publish
-        topic: dbus2mqtt/subscriptions/state
-        payload_type: json
-        payload_template: |
-          now: "{{ now() }}"
-          mpris_dbus_names: '{{ mpris_bus_names }}'
-          bus_names: '{{ dbus_list("*") }}'
+# flows:
+#   - name: "Publish dbus2mqtt state"
+#     triggers:
+#       - type: schedule
+#         interval: {seconds: 10}
+#     actions:
+#       - type: context_set
+#         context:
+#           mpris_bus_names: '{{ dbus_list("*") }}'
+#       - type: mqtt_publish
+#         topic: dbus2mqtt/subscriptions/state
+#         payload_type: json
+#         payload_template: |
+#           now: "{{ now() }}"
+#           mpris_dbus_names: '{{ mpris_bus_names }}'
+#           bus_names: '{{ dbus_list("*") }}'

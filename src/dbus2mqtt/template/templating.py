@@ -78,22 +78,25 @@ class TemplateEngine:
     def update_app_context(self, context: dict[str, Any]):
         self.app_context.update(context)
 
-    def _dict_to_templatable_str(self, value):
-        value = _mark_templates(value)
-        value = yaml.dump(value, Dumper=_CustomSafeDumper)
+    def _dict_to_templatable_str(self, value: dict[str, Any]) -> str:
+        template_str = _mark_templates(value)
+        template_str = yaml.dump(template_str, Dumper=_CustomSafeDumper)
         # value= yaml.safe_dump(value, default_style=None)
         # print(f"_dict_to_templatable_str: {value}")
-        value = value.replace("template:{{", "{{").replace("}}:template", "}}")
+        template_str = template_str.replace("template:{{", "{{").replace("}}:template", "}}")
         # print(value)
-        return value
+        return template_str
 
-    def _render_result_to_dict(self, value):
+    def _render_result_to_dict(self, value: str) -> dict[str, Any]:
         return yaml.load(value, _CustomSafeLoader)
 
-    def render_template(self, template, context: dict[str, Any] = {}) -> Any:
+    def render_template(self, template: str | dict | None, res_type: type, context: dict[str, Any] = {}) -> Any:
 
         if not template:
             return None
+
+        if res_type not in [dict, str]:
+            raise ValueError(f"Unsupported result type: {res_type}")
 
         dict_template = isinstance(template, dict)
         if dict_template:
@@ -101,15 +104,18 @@ class TemplateEngine:
 
         res = self.jinja2_env.from_string(template).render(**context)
 
-        if dict_template:
+        if res_type is dict:
             res = self._render_result_to_dict(res)
 
         return res
 
-    async def async_render_template(self, template, context: dict[str, Any] = {}) -> Any:
+    async def async_render_template(self, template: str | dict | None, res_type: type, context: dict[str, Any] = {}) -> Any:
 
         if not template:
             return None
+
+        if res_type not in [dict, str]:
+            raise ValueError(f"Unsupported result type: {res_type}")
 
         dict_template = isinstance(template, dict)
         if dict_template:
@@ -117,7 +123,7 @@ class TemplateEngine:
 
         res = await self.jinja2_async_env.from_string(template).render_async(**context)
 
-        if dict_template:
+        if res_type is dict:
             res = self._render_result_to_dict(res)
 
         return res

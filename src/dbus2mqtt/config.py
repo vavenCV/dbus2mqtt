@@ -15,14 +15,8 @@ class SignalConfig:
     filter: str | None = None
 
     def matches_filter(self, template_engine: TemplateEngine, *args) -> bool:
-        res = template_engine.render_template(self.filter, { "args": args })
+        res = template_engine.render_template(self.filter, str, { "args": args })
         return res == "True"
-
-    async def render_payload_template(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
-        return await template_engine.async_render_template(self.payload_template, context)
-
-    def render_mqtt_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
-        return template_engine.render_template(self.mqtt_topic, context)
 
 @dataclass
 class MethodConfig:
@@ -41,7 +35,7 @@ class InterfaceConfig:
     properties: list[PropertyConfig] = field(default_factory=list)
 
     def render_mqtt_call_method_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
-        return template_engine.render_template(self.mqtt_call_method_topic, context)
+        return template_engine.render_template(self.mqtt_call_method_topic, str, context)
 
 @dataclass
 class FlowTriggerMqttConfig:

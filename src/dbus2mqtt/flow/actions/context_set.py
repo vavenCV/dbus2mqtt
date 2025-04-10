@@ -16,11 +16,11 @@ class ContextSetAction(FlowAction):
 
         aggregated_context = context.get_aggregated_context()
         if self.config.global_context:
-            context_new = await self.templating.async_render_template(self.config.global_context, aggregated_context)
+            context_new = await self.templating.async_render_template(self.config.global_context, dict, aggregated_context)
             logger.debug(f"Update global_context with: {context_new}")
             context.global_flows_context.update(context_new)
 
         if self.config.context:
-            context_new = await self.templating.async_render_template(self.config.context, aggregated_context)
+            context_new = await self.templating.async_render_template(self.config.context, dict, aggregated_context)
             logger.debug(f"Update context with: {context_new}")
             context.context.update(context_new)

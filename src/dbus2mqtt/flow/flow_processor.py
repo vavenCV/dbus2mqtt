@@ -42,7 +42,7 @@ class FlowScheduler:
                 if trigger.type == "schedule":
                     existing_job = self.scheduler.get_job(trigger.id)
                     if existing_job:
-                        logger.info(f"Skipping creation, flow scheduler already exists, id={trigger.id}")
+                        logger.debug(f"Skipping creation, flow scheduler already exists, id={trigger.id}")
                     if not existing_job and trigger.type == "schedule":
                         logger.info(f"Starting flow scheduler id={trigger.id}")
                         if trigger.interval:

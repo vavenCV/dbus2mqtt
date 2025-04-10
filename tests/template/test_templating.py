@@ -7,7 +7,7 @@ def test_preregisted_custom_function():
     template = "now={{ now().isoformat() }}"
 
     templating = TemplateEngine()
-    res: str = templating.render_template(template)
+    res: str = templating.render_template(template, str)
 
     assert isinstance(res, str)
     assert "now" in res
@@ -19,7 +19,7 @@ def test_dict_with_integer_expression():
     }
 
     templating = TemplateEngine()
-    res = templating.render_template(template)
+    res = templating.render_template(template, dict)
 
     assert isinstance(res, dict)
     assert res["value"] == 1
@@ -44,7 +44,7 @@ def test_nested_dict_templates():
     }
 
     templating = TemplateEngine()
-    res = templating.render_template(template, context)
+    res = templating.render_template(template, dict, context)
 
     assert isinstance(res, dict)
 
