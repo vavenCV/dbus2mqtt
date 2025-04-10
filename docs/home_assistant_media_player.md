@@ -11,7 +11,7 @@ This example shows how this dbus2mqtt can act as a bridge between the MPRIS play
 Features:
 * dbus subscription using `org.mpris.MediaPlayer2.*` wildcard to support multiple concurrent MRPIS players
 * Every 5 seconds, the state if the `first` known MPRIS player is published to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
-* Every MPRIS property update immediately publishes the state to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state` 
+* Every MPRIS property update immediately publishes the state to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 * Suppport for player commands (see table below)
 
 # Player Commands
@@ -55,7 +55,7 @@ mqtt:
           idle
         {% endif %}
 
-media_player:  
+media_player:
   - platform: mqtt-mediaplayer
     name: "MPRIS Media Player"
     topic:
@@ -88,4 +88,4 @@ media_player:
 
 # Other solutions
 
-Another MQTT Mediaplayer plugin for HASS is <https://github.com/jonaseickhoff/hass-multiroom-mqtt-mediaplayer> 
+Another MQTT Mediaplayer plugin for HASS is <https://github.com/jonaseickhoff/hass-multiroom-mqtt-mediaplayer>

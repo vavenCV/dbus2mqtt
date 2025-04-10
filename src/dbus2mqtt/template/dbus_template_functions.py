@@ -2,8 +2,10 @@ import fnmatch
 import logging
 
 from typing import Any
-from dbus_next.errors import DBusError
+
 from dbus_next.constants import ErrorType
+from dbus_next.errors import DBusError
+
 from dbus2mqtt.dbus.dbus_client import DbusClient
 
 logger = logging.getLogger(__name__)
