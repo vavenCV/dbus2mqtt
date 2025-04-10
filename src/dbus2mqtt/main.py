@@ -4,6 +4,7 @@ import sys
 
 from typing import cast
 
+import colorlog
 import dbus_next.aio as dbus_aio
 import jsonargparse
 
@@ -101,12 +102,32 @@ def main():
 
     config: Config = cast(Config, parser.instantiate_classes(cfg))
 
+    handler = colorlog.StreamHandler(stream=sys.stdout, )
+    handler.setFormatter(colorlog.ColoredFormatter(
+        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+        log_colors={
+            "DEBUG": "light_black",
+            # "INFO": "green",
+            "WARNING": "yellow",
+            "ERROR": "red",
+            "CRITICAL": "bold_red",
+        }
+    ))
     if cfg.verbose:
-        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG, handlers=[handler])
     else:
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, handlers=[handler])
         apscheduler_logger = logging.getLogger("apscheduler")
         apscheduler_logger.setLevel(logging.WARNING)
+
+
+    # handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+
+    # logger = colorlog.getLogger('')
+    # for handler in logger.handlers:
+    #     print(handler.st)
+    #     if isinstance(handler, colorlog.StreamHandler):
+    #         handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(levelname)s:%(name)s:%(message)s'))
 
     logger.debug(f"config: {config}")
 
