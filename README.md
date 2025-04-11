@@ -13,6 +13,9 @@ Feature TODO list
 * Implement method handling from MQTT to dbus
 * Remove dependency between dbus signal handling and message publishing. Allow for multiple trigger types to publish payloads. Message publishing can be triggerd by timer/initial start/property change signal. Needed because the PropertiesChanged signal is not triggered for all properties like 'Position'
 * Stability testing and play around with dbus-next to see how it behaves. An alternative might be python-sdbus
+* Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expection json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
+* when MPRIS player disconnects, allow to publish a 'Stopped playing / quit' message on mqtt
+
 
 ## Getting started with dbus2mqtt
 

@@ -6,27 +6,30 @@ import logging
 from typing import Any
 
 import paho.mqtt.client as mqtt
+import yaml
 
 from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.subscribeoptions import SubscribeOptions
 
-from dbus2mqtt.config import MqttConfig
-from dbus2mqtt.event_broker import EventBroker, MqttMessage
+from dbus2mqtt import AppContext
+from dbus2mqtt.event_broker import MqttMessage
 
 logger = logging.getLogger(__name__)
 
 class MqttClient:
 
-    def __init__(self, config: MqttConfig, event_broker: EventBroker):
-        self.config = config
-        self.event_broker = event_broker
-        # self.mqtt_msg_handler = mqtt_msg_handler
+    def __init__(self, app_context: AppContext):
+        self.config = app_context.config.mqtt
+        self.event_broker = app_context.event_broker
 
-        self.client = mqtt.Client(CallbackAPIVersion.VERSION2)
+        self.client = mqtt.Client(
+            protocol=mqtt.MQTTv5,
+            callback_api_version=CallbackAPIVersion.VERSION2
+        )
 
         self.client.username_pw_set(
-            username=config.username,
-            password=config.password.get_secret_value()
+            username=self.config.username,
+            password=self.config.password.get_secret_value()
         )
 
         self.client.on_connect = self.on_connect
@@ -50,7 +53,16 @@ class MqttClient:
         while True:
             msg = await self.event_broker.mqtt_publish_queue.async_q.get()  # Wait for a message
             try:
-                payload = json.dumps(msg.payload)
+                payload = msg.payload
+                type = msg.payload_serialization_type
+                if isinstance(msg.payload, dict):
+                    if type == "json":
+                        payload = json.dumps(msg.payload)
+                    elif type == "yaml":
+                        payload = yaml.dump(msg.payload)
+                elif type == "text":
+                    payload = str(payload)
+
                 logger.debug(f"mqtt_publish_queue_processor_task: payload={payload}")
                 self.client.publish(topic=msg.topic, payload=payload)
             except Exception as e:

@@ -2,12 +2,18 @@ import asyncio
 import logging
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 import janus
 
-from dbus2mqtt.config import SignalHandlerConfig
-from dbus2mqtt.dbus_types import BusNameSubscriptions
+from dbus2mqtt.config import (
+    FlowConfig,
+    FlowTriggerConfig,
+    SignalConfig,
+    SubscriptionConfig,
+)
+from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
 
 logger = logging.getLogger(__name__)
 
@@ -16,27 +22,39 @@ logger = logging.getLogger(__name__)
 class MqttMessage:
     topic: str
     payload: Any
+    payload_serialization_type: str = "json"
 
 @dataclass
 class DbusSignalWithState:
     bus_name_subscriptions: BusNameSubscriptions
     path: str
     interface_name: str
-    signal_handler_configs: list[SignalHandlerConfig]
+    subscription_config: SubscriptionConfig
+    signal_config: SignalConfig
     args: list[Any]
+
+@dataclass
+class FlowTriggerMessage:
+    flow_config: FlowConfig
+    flow_trigger_config: FlowTriggerConfig
+    timestamp: datetime
+    context: dict[str, Any] | None = None
 
 class EventBroker:
     def __init__(self):
         self.mqtt_receive_queue = janus.Queue[MqttMessage]()
         self.mqtt_publish_queue = janus.Queue[MqttMessage]()
         self.dbus_signal_queue = janus.Queue[DbusSignalWithState]()
+        self.flow_trigger_queue = janus.Queue[FlowTriggerMessage]()
         # self.dbus_send_queue: janus.Queue
 
     async def close(self):
         await asyncio.gather(
             self.mqtt_receive_queue.aclose(),
             self.mqtt_publish_queue.aclose(),
-            self.dbus_signal_queue.aclose()
+            self.dbus_signal_queue.aclose(),
+            self.flow_trigger_queue.aclose(),
+            return_exceptions=True
         )
 
     def on_mqtt_receive(self, msg: MqttMessage):

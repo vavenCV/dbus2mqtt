@@ -3,6 +3,7 @@
 #   port:
 
 dbus:
+  # mappings:
   subscriptions:
     - bus_name: org.mpris.MediaPlayer2.*
       path: /org/mpris/MediaPlayer2
@@ -10,31 +11,22 @@ dbus:
       # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
-          # signals:
-          #     # with no postprocessing, just use handlers otherwise
-          #   - signal: PropertiesChanged  # simple forwarding of signal to mqtt
-          #     mqtt_signal_topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
-          signal_handlers:
-            # TODO: allow for trigger by timer
-            # Position property updates do not trigger a PropertiesChange event
+          signals:
             - signal: PropertiesChanged
               filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
-              payload_template: |
-                {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
-              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
-            - signal: PropertiesChanged
-              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
-              payload_template: |
-                interface_name: {{ args[0] }}
-                changed_properties:
-                  {{ args[1] | to_nice_yaml | indent(2) }}
-                invalidated_properties: {{ args[2] }}
-                properties:
-                  {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2') }}
-                player_properties:
-                  {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
-              # mqtt_topic: dbus2mqtt/{{ bus_name }}/state
-              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
+
+              # shorthand notation for flow
+              # actions:
+              #   - type: mqtt_publish
+              #     topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
+              #     payload_type: json
+              #     payload_template: |
+              #       bus_name: {{ bus_name }}
+              #       interface_name: {{ args[0] }}
+              #       changed_properties:
+              #         {{ args[1] | to_nice_yaml | indent(2) }}
+              #       invalidated_properties: {{ args[2] }}
+
           methods:
             - method: GetAll
 
@@ -55,17 +47,94 @@ dbus:
           properties:
             - property: Metadata
             - property: Volume
+            - property: PlaybackStatus
 
-# handlers:
-#   - name: mpris_on_properties_changes
+      flows:
+        # - name: "set active player"
+        #   triggers:
+        #     - type: dbus_signal
+        #       bus_name: "org.freedesktop.Notifications"
+        #       path: "/org/freedesktop/Notifications"
+        #       interface: "org.freedesktop.Notifications"
+        #       signal: PropertiesChanged
+        #       filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+        #   global_template_context:
+        #     active_mpris_player: "{{ dbus_signal.args[0] }}"  # sets active bus_name
+        - name: "MPRIS publish state on schedule"
+          triggers:
+            # - type: mqtt
+            #   topic: "sensor/input"
+            - type: schedule
+              interval: {seconds: 5}
+            - type: dbus_signal
+              interface: org.freedesktop.DBus.Properties
+              signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+              # cron: { second: "*" }
+              # - type: dbus_signal
+              # #   bus_name: "org.freedesktop.Notifications"
+              # #   path: "/org/freedesktop/Notifications"
+              #   interface: "org.freedesktop.Notifications"
+              #   signal: "NotificationClosed"
+              #   # filter: ""
+          # template_context:
+          #   active_mpris_player_bus_name: "{{ global.active_mpris_player_bus_name }}"
+          # dbus_context:
+          #   bus_name: org.mpris.MediaPlayer2.*
+          #   path: /org/mpris/MediaPlayer2
+          #   bus_name_selector_ref: abc
+          #   active_bus_name_selector:
+          #     - type: dbus_signal_context
+          #     # - type: property_value
+          #     #   expression: org.mpris.MediaPlayer2.Player:PlaybackStatus == Playing
+          #       # interface: org.mpris.MediaPlayer2.Player
+          #       # property: PlaybackStatus
+          #       # value: Playing
+          #     - type: first
+          actions:
+            - type: context_set
+              # global_context:
+              context:
+                # usfull jinja filters for mpris: first, last, last_seen, property(PlaybackStatus, Playing)
+                mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
+                path: /org/mpris/MediaPlayer2
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+              payload_type: json
+              payload_template: |
+                bus_name: {{ mpris_bus_name }}
+                {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
+        - name: "MPRIS signal to mqtt"
+          triggers:
+            - type: dbus_signal
+              # bus_name: org.mpris.MediaPlayer2.*
+              # path: /org/mpris/MediaPlayer2
+              interface: org.freedesktop.DBus.Properties
+              signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+          actions:
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/signal/PropertiesChanged
+              payload_type: json
+              payload_template:
+                bus_name: "{{ bus_name }}"
+                interface_name: "{{ args[0] }}"
+                changed_properties: |
+                  {{ args[1] | to_nice_yaml | indent(2) }}
+                invalidated_properties: "{{ args[2] }}"
+# flows:
+#   - name: "Publish dbus2mqtt state"
 #     triggers:
-#       - schedule: 5s
-#       - on_signal:
-#           interface: org.freedesktop.DBus.Properties
-#           signal: PropertiesChanged
-#           filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+#       - type: schedule
+#         interval: {seconds: 10}
 #     actions:
-#       - publish_mqtt:
-#           topic: dbus2mqtt/org.mpris.MediaPlayer2/debug
-#           payload: |
-#             {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
+#       - type: context_set
+#         context:
+#           mpris_bus_names: '{{ dbus_list("*") }}'
+#       - type: mqtt_publish
+#         topic: dbus2mqtt/subscriptions/state
+#         payload_type: json
+#         payload_template: |
+#           now: "{{ now() }}"
+#           mpris_dbus_names: '{{ mpris_bus_names }}'
+#           bus_names: '{{ dbus_list("*") }}'
