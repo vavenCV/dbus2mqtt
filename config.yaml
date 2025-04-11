@@ -48,6 +48,7 @@ dbus:
             - property: Metadata
             - property: Volume
             - property: PlaybackStatus
+            - property: Rate
 
       flows:
         # - name: "set active player"

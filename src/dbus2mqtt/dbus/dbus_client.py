@@ -122,8 +122,13 @@ class DbusClient:
 
     async def _visit_bus_name_path(self, bus_name: str, path: str) -> list[tuple[InterfaceConfig, SubscriptionConfig]]:
 
-        introspection = await self.bus.introspect(bus_name, path)
         new_subscriptions: list[tuple[InterfaceConfig, SubscriptionConfig]] = []
+
+        try:
+            introspection = await self.bus.introspect(bus_name, path)
+        except TypeError as e:
+            logger.warning(f"bus.introspect failed, bus_name={bus_name}, path={path}: {e}")
+            return new_subscriptions
 
         if len(introspection.nodes) == 0:
             logger.debug(f"leaf node: bus_name={bus_name}, path={path}, is_root={introspection.is_root}, interfaces={[i.name for i in introspection.interfaces]}")
@@ -237,6 +242,18 @@ class DbusClient:
 
         return res
 
+    async def set_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str, value):
+
+        call_method_name = "set_" + camel_to_snake(property)
+        res = await interface.__getattribute__(call_method_name)(value)
+
+        if res:
+            res = unwrap_dbus_object(res)
+
+        logger.info(f"set_dbus_interface_property: bus_name={interface.bus_name}, interface={interface.introspection.name}, property={property}, res={res}")
+
+        return res
+
     async def mqtt_receive_queue_processor_task(self):
         """Continuously processes messages from the async queue."""
         while True:
@@ -270,7 +287,6 @@ class DbusClient:
                                     "args": unwrapped_args,
                                 }
                                 trigger_message = FlowTriggerMessage(flow, trigger, datetime.now(), context)
-                                print("XXXXXXXXXXXXX")
                                 # log_msg = f"on_signal: signal={signal_handler_config.signal}, bus_name={bus_name}, path={path}, interface={interface_name}"
                                 # if logger.isEnabledFor(logging.DEBUG):
                                 #     logger.debug(f"{log_msg}, payload={payload}")
@@ -280,8 +296,8 @@ class DbusClient:
                                 await self.event_broker.flow_trigger_queue.async_q.put(trigger_message)
                         except Exception as e:
                             logger.warning(f"dbus_signal_queue_processor_task: Exception {e}", exc_info=True)
-                        finally:
-                            self.event_broker.dbus_signal_queue.async_q.task_done()
+
+            self.event_broker.dbus_signal_queue.async_q.task_done()
 
     async def _on_mqtt_msg(self, msg: MqttMessage):
         # self.queue.put({
@@ -301,9 +317,17 @@ class DbusClient:
 
         logger.debug(f"on_mqtt_msg: topic={msg.topic}, payload={json.dumps(msg.payload)}")
         calls_done: list[str] = []
+        properties_set: list[str] = []
 
-        payload_method = msg.payload["method"]
+        payload_method = msg.payload.get("method")
         payload_method_args = msg.payload.get("args") or []
+
+        payload_property = msg.payload.get("property")
+        payload_value = msg.payload.get("value")
+
+        if not payload_method and not (payload_property and payload_value):
+            logger.info(f"on_mqtt_msg: Unsupported payload, missing 'method' or 'property/value', got: {msg.payload}")
+            return
 
         for [bus_name, bus_name_subscription] in self.subscriptions.items():
             for [path, proxy_object] in bus_name_subscription.path_objects.items():
@@ -323,10 +347,23 @@ class DbusClient:
                                 except Exception as e:
                                     logger.warning(f"on_mqtt_msg: method={method.method}, bus_name={bus_name} failed, exception={e}")
 
-                                    continue
+                        for property in interface_config.properties:
+                            # filter configured property, configured topic, ...
+                            if property.property == payload_property:
+                                interface = proxy_object.get_interface(name=interface_config.interface)
 
-        if len(calls_done) == 0:
-            logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
+                                try:
+                                    logger.info(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
+                                    await self.set_dbus_interface_property(interface, property.property, payload_value)
+                                    properties_set.append(property.property)
+                                except Exception as e:
+                                    logger.warning(f"on_mqtt_msg: property={property.property}, bus_name={bus_name} failed, exception={e}")
+
+        if len(calls_done) == 0 and len(properties_set) == 0:
+            if payload_method:
+                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
+            if payload_property:
+                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, property={payload_property}, active bus_names={list(self.subscriptions.keys())}")
 
         # raw mode, payload contains: bus_name (specific or wildcard), path, interface_name
         # topic: dbus2mqtt/raw (with allowlist check)

@@ -16,7 +16,6 @@ Feature TODO list
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expection json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
 * when MPRIS player disconnects, allow to publish a 'Stopped playing / quit' message on mqtt
 
-
 ## Getting started with dbus2mqtt
 
 Create a `config.yaml` file which configures with dbus services to expose. Use the following as a minimal example to get started. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic.
@@ -106,8 +105,6 @@ topic: "dbus2mqtt/org.mpris.MediaPlayer2/?/command"
 
 ### Jinja templating
 
-
-
 ## Running from source
 
 Running from source can be done using `uv`
@@ -123,7 +120,6 @@ uv run dbus2mqtt
 
 # https://dbus.freedesktop.org/doc/dbus-tutorial.html
 # https://dbus.freedesktop.org/doc/dbus-specification.html
-# https://github.com/altdesktop/playerctl/blob/master/playerctl/playerctl-player-manager.c
 dbus-monitor
 
 busctl --user introspect org.freedesktop.DBus /org/freedesktop/DBus
@@ -132,5 +128,4 @@ playerctl -l
 busctl --user introspect org.mpris.MediaPlayer2.vlc /org/mpris/MediaPlayer2
 
 dbus-send --print-reply --session --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep mpris
-
 ```

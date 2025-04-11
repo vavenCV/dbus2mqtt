@@ -1,0 +1,47 @@
+# mqtt:
+#   host:
+#   port:
+
+dbus:
+  subscriptions:
+
+    - bus_name: org.freedesktop.portal.Desktop
+      path: /org/freedesktop/portal/desktop
+      # https://docs.flatpak.org/en/latest/portal-api-reference.html
+
+      interfaces:
+        - interface: org.freedesktop.DBus.Properties
+          signals:
+            - signal: PropertiesChanged
+              # filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+          methods:
+            - method: GetAll
+
+        # - interface: org.mpris.MediaPlayer2
+        #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+        #   methods:
+        #     - method: Quit
+
+        # - interface: org.mpris.MediaPlayer2.Player
+        #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+        #   methods:
+        #     - method: Pause
+        #     - method: Play
+        #     - method: PlayPause
+        #     - method: OpenUri
+        #     - method: Stop
+
+      flows:
+        - name: "publish state on schedule"
+          triggers:
+            - type: schedule
+              interval: {seconds: 5}
+              # - type: dbus_signal
+              #   interface: org.freedesktop.DBus.Properties
+              #   signal: PropertiesChanged
+          actions:
+            - type: mqtt_publish
+              topic: dbus2mqtt/Desktop/statememory
+              payload_type: json
+              payload_template: |
+                {{ dbus_call('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop', 'org.freedesktop.DBus.Properties', 'GetAll', ['org.freedesktop.portal.MemoryMonitor']) | to_yaml }}

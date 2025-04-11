@@ -1,6 +1,6 @@
 # Mediaplayer integration with Home Assistant
 
-Trying it out
+Trying out this example
 
 ```bash
 uv run dbus2mqtt --config docs/home_assistant_media_player.yaml
@@ -9,12 +9,13 @@ uv run dbus2mqtt --config docs/home_assistant_media_player.yaml
 This example shows how this dbus2mqtt can act as a bridge between the MPRIS player and Home Assistant.
 
 Features:
+
 * dbus subscription using `org.mpris.MediaPlayer2.*` wildcard to support multiple concurrent MRPIS players
 * Every 5 seconds, the state if the `first` known MPRIS player is published to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 * Every MPRIS property update immediately publishes the state to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 * Suppport for player commands (see table below)
 
-# Player Commands
+## Player Commands
 
 The following table lists the supported player commands, their descriptions, and an example JSON payload for invoking them via MQTT.
 
@@ -33,7 +34,7 @@ Replace `<URI>` in the `OpenUri` payload with the desired media URI.
 
 For an overview of MPRIS commands have a look at <https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html>
 
-# Home Assistant configuration
+## Home Assistant configuration
 
 Example HASS configuration is based upon <https://github.com/TroyFernandes/hass-mqtt-mediaplayer>
 
@@ -86,6 +87,6 @@ media_player:
         payload: '{"method": "Quit"}'
 ```
 
-# Other solutions
+## Other solutions
 
 Another MQTT Mediaplayer plugin for HASS is <https://github.com/jonaseickhoff/hass-multiroom-mqtt-mediaplayer>

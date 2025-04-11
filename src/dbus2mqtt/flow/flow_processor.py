@@ -47,10 +47,28 @@ class FlowScheduler:
                         logger.info(f"Starting flow scheduler id={trigger.id}")
                         if trigger.interval:
                             # Each schedule gets its own job
-                            self.scheduler.add_job(self.flow_strigger, "interval", id=trigger.id, args=[flow, trigger], **trigger.interval)
+                            self.scheduler.add_job(
+                                self.flow_strigger,
+                                "interval",
+                                id=trigger.id,
+                                max_instances=1,
+                                misfire_grace_time=5,
+                                coalesce=True,
+                                args=[flow, trigger],
+                                **trigger.interval
+                            )
                         elif trigger.cron:
                             # Each schedule gets its own job
-                            self.scheduler.add_job(self.flow_strigger, "cron", id=trigger.id, args=[flow, trigger], **trigger.cron)
+                            self.scheduler.add_job(
+                                self.flow_strigger,
+                                "cron",
+                                id=trigger.id,
+                                max_instances=1,
+                                misfire_grace_time=5,
+                                coalesce=True,
+                                args=[flow, trigger],
+                                **trigger.cron
+                            )
 
     def stop_flow_set(self, flows):
         for flow in flows:
@@ -135,7 +153,7 @@ class FlowProcessor:
     async def flow_processor_task(self):
         """Continuously processes messages from the async queue."""
 
-        # logger.info(f"flow_processor_task: configuring flows={[f.name for f in self.config.flows]}")
+        # logger.info(f"flow_processor_task: configuring flows={[f.name for f in self.app_context.config.flows]}")
 
         while True:
             flow_trigger_message = await self.event_broker.flow_trigger_queue.async_q.get()  # Wait for a message
