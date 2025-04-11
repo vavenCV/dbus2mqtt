@@ -15,6 +15,7 @@ Feature TODO list
 * Stability testing and play around with dbus-next to see how it behaves. An alternative might be python-sdbus
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expection json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
 * when MPRIS player disconnects, allow to publish a 'Stopped playing / quit' message on mqtt
+* Property set only works the first time, need to restart after which the first set will work again
 
 ## Getting started with dbus2mqtt
 
