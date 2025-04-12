@@ -5,43 +5,32 @@
 dbus:
   subscriptions:
 
-    - bus_name: org.freedesktop.portal.Desktop
-      path: /org/freedesktop/portal/desktop
-      # https://docs.flatpak.org/en/latest/portal-api-reference.html
+    # https://lira.no-ip.org:8443/doc/gnome-session/dbus/gnome-session.html 
+    - bus_name: org.gnome.SessionManager
+      path: /org/gnome/SessionManager
 
       interfaces:
         - interface: org.freedesktop.DBus.Properties
           signals:
             - signal: PropertiesChanged
-            # filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
           methods:
             - method: GetAll
 
-            # - interface: org.mpris.MediaPlayer2
-            #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            #   methods:
-            #     - method: Quit
-
-            # - interface: org.mpris.MediaPlayer2.Player
-            #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            #   methods:
-            #     - method: Pause
-            #     - method: Play
-            #     - method: PlayPause
-            #     - method: OpenUri
-            #     - method: Stop
+        - interface: org.gnome.SessionManager
+          mqtt_call_method_topic: dbus2mqtt/SessionManager/command
+          methods:
+            - method: Logout
+            - method: Reboot  # reboot dialog
 
       flows:
         - name: "publish state on schedule"
           triggers:
             - type: schedule
               interval: {seconds: 5}
-              # - type: dbus_signal
-              #   interface: org.freedesktop.DBus.Properties
-              #   signal: PropertiesChanged
           actions:
             - type: mqtt_publish
-              topic: dbus2mqtt/Desktop/statememory
+              topic: dbus2mqtt/SessionManager
               payload_type: json
+                # {{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.freedesktop.DBus.Properties', 'GetAll', ['org.gnome.SessionManager']) }}
               payload_template: |
-                {{ dbus_call('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop', 'org.freedesktop.DBus.Properties', 'GetAll', ['org.freedesktop.portal.MemoryMonitor']) | to_yaml }}
+                clients: {{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.gnome.SessionManager', 'GetClients') }}
