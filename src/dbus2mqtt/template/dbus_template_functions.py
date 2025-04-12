@@ -26,7 +26,7 @@ class DbusContext:
 
         return res
 
-    async def async_dbus_call_fn(self, bus_name: str, path: str, interface: str, method:str, method_args: list[Any]):
+    async def async_dbus_call_fn(self, bus_name: str, path: str, interface: str, method:str, method_args: list[Any] = []):
 
         if not isinstance(method_args, list):
             # Pylance will mentiod this line is unreachable. It is not as jinja2 can pass in any type
