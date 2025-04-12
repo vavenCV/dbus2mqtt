@@ -5,7 +5,7 @@
 dbus:
   subscriptions:
 
-    # https://lira.no-ip.org:8443/doc/gnome-session/dbus/gnome-session.html 
+    # https://lira.no-ip.org:8443/doc/gnome-session/dbus/gnome-session.html
     - bus_name: org.gnome.SessionManager
       path: /org/gnome/SessionManager
 
@@ -31,6 +31,5 @@ dbus:
             - type: mqtt_publish
               topic: dbus2mqtt/SessionManager
               payload_type: json
-                # {{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.freedesktop.DBus.Properties', 'GetAll', ['org.gnome.SessionManager']) }}
               payload_template: |
                 clients: {{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.gnome.SessionManager', 'GetClients') }}
