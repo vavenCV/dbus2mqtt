@@ -30,6 +30,7 @@ dbus:
             - method: Stop
             - method: Next
             - method: Previous
+            - method: Seek
             - method: PlayPause
             - method: OpenUri
 

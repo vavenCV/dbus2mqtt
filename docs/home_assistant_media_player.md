@@ -36,14 +36,15 @@ For an overview of MPRIS commands have a look at <https://specifications.freedes
 
 ## Home Assistant configuration
 
-Example HASS configuration is based upon <https://github.com/TroyFernandes/hass-mqtt-mediaplayer>
+Example HASS configuration is based upon <https://github.com/Sennevds/media_player.template/tree/master>
 
-First step is te create a MQTT sensor for the topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
+Create the MQTT sensor for topic `dbus2mqtt/org.mpris.MediaPlayer2/state` and the Media Player as shown below
 
 ```yaml
 mqtt:
   sensor:
     - name: "MPRIS Media Player"
+      unique_id: fa21260f-d85d-478f-9b1f-da2887eba441
       state_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       json_attributes_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       value_template: >-
@@ -52,41 +53,80 @@ mqtt:
           playing
         {% elif status == 'Paused' %}
           paused
-        {% else %}
+        {% elif status == 'Stopped' %}
           idle
+        {% else %}
+          off
         {% endif %}
 
 media_player:
-  - platform: mqtt-mediaplayer
-    name: "MPRIS Media Player"
-    topic:
-      song_title: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:title'] }}"
-      song_artist: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:artist'] | first }}"
-      song_album: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:album'] }}"
-      song_volume: "{{ state_attr('sensor.mpris_media_player', 'Volume') }}"
-      player_status: "{{ states('sensor.mpris_media_player') }}"
-      volume:
-        service: mqtt.publish
-        data:
-          topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-          payload: '{"command": "set_property", "property": "Volume", "value": {{volume}} }'
-    play:
-      service: mqtt.publish
-      data:
-        topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-        payload: '{"method": "Play"}'
-    pause:
-      service: mqtt.publish
-      data:
-        topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-        payload: '{"method": "Pause"}'
-    turn_off:
-      service: mqtt.publish
-      data:
-        topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-        payload: '{"method": "Quit"}'
+  - platform: media_player_template
+    media_players:
+      mpris:
+        # device_class: receiver
+        unique_id: 96ff0e0d-9b58-4661-bde3-15162c95e933
+        friendly_name: MPRIS Media Player
+        value_template: "{{ states('sensor.mpris_media_player') }}"
+
+        current_volume_template: "{{ state_attr('sensor.mpris_media_player', 'Volume') }}"
+        current_is_muted_template: "{{ state_attr('sensor.mpris_media_player', 'Volume') == 0 }}"
+        current_position_template: "{{ state_attr('sensor.mpris_media_player', 'Position') }}"
+        title_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:title'] }}"
+
+        media_content_type_template: music  # needed to show 'artist'
+        media_duration_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:length'] }}"
+        media_image_url_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:artUrl'] }}"
+        album_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:album'] }}"
+        artist_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:artist'] | first }}"
+
+        turn_off:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Quit"}'
+        play:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Play"}'
+        pause:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Pause"}'
+        stop:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Stop"}'
+        next:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Next"}'
+        previous:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Previous"}'
+        seek:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"method": "Seek", "args": [{{ position | int }}] }'
+        set_volume:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"property": "Volume", "value": {{volume}} }'
+        volume_up:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"property": "Volume", "value": 0.0 }'
+        volume_down:
+          service: mqtt.publish
+          data:
+            topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            payload: '{"property": "Volume", "value": 0.0 }'
 ```
-
-## Other solutions
-
-Another MQTT Mediaplayer plugin for HASS is <https://github.com/jonaseickhoff/hass-multiroom-mqtt-mediaplayer>
