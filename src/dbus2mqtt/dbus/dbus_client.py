@@ -325,8 +325,8 @@ class DbusClient:
         payload_property = msg.payload.get("property")
         payload_value = msg.payload.get("value")
 
-        if not payload_method and not (payload_property and payload_value):
-            logger.info(f"on_mqtt_msg: Unsupported payload, missing 'method' or 'property/value', got: {msg.payload}")
+        if payload_method is None and (payload_property is None or payload_value is None):
+            logger.info(f"on_mqtt_msg: Unsupported payload, missing 'method' or 'property/value', got method={payload_method}, property={payload_property}, value={payload_value} from {msg.payload}")
             return
 
         for [bus_name, bus_name_subscription] in self.subscriptions.items():

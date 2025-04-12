@@ -27,9 +27,11 @@ dbus:
           methods:
             - method: Pause
             - method: Play
+            - method: Stop
+            - method: Next
+            - method: Previous
             - method: PlayPause
             - method: OpenUri
-            - method: Stop
 
       flows:
         - name: "MPRIS publish state on schedule"
