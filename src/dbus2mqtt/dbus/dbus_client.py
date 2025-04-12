@@ -1,8 +1,11 @@
 import json
 import logging
+import re
 
 from datetime import datetime
+from typing import Any
 
+import dbus_next
 import dbus_next.aio as dbus_aio
 import dbus_next.introspection as dbus_introspection
 
@@ -15,6 +18,12 @@ from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 
 logger = logging.getLogger(__name__)
 
+# dbus_next path to support https://docs.flatpak.org/en/latest/portal-api-reference.html
+# Altough not correct, flatpak exposes properties with names containing '-'
+# This is failing assertions in dbus_next
+# original: r'^[A-Za-z_][A-Za-z0-9_]*$'
+# patched:  r'^[A-Za-z_][A-Za-z0-9_-]*$'
+dbus_next.validators._element_re = re.compile(r'^[A-Za-z_][A-Za-z0-9_-]*$')
 
 class DbusClient:
 
@@ -218,7 +227,7 @@ class DbusClient:
             logger.debug(f'NameOwnerChanged.old: name={name}')
             await self._handle_bus_name_removed(name)
 
-    async def call_dbus_interface_method(self, interface: dbus_aio.proxy_object.ProxyInterface, method: str, method_args: list):
+    async def call_dbus_interface_method(self, interface: dbus_aio.proxy_object.ProxyInterface, method: str, method_args: list[Any]):
 
         call_method_name = "call_" + camel_to_snake(method)
         res = await interface.__getattribute__(call_method_name)(*method_args)
