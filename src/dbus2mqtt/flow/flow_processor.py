@@ -22,7 +22,7 @@ class FlowScheduler:
         self.event_broker = app_context.event_broker
         self.scheduler = AsyncIOScheduler()
 
-    async def flow_strigger(self, flow, trigger_config: FlowTriggerConfig):
+    async def _schedule_flow_strigger(self, flow, trigger_config: FlowTriggerConfig):
         trigger = FlowTriggerMessage(flow, trigger_config, datetime.now())
         await self.event_broker.flow_trigger_queue.async_q.put(trigger)
 
@@ -48,7 +48,7 @@ class FlowScheduler:
                         if trigger.interval:
                             # Each schedule gets its own job
                             self.scheduler.add_job(
-                                self.flow_strigger,
+                                self._schedule_flow_strigger,
                                 "interval",
                                 id=trigger.id,
                                 max_instances=1,
@@ -60,7 +60,7 @@ class FlowScheduler:
                         elif trigger.cron:
                             # Each schedule gets its own job
                             self.scheduler.add_job(
-                                self.flow_strigger,
+                                self._schedule_flow_strigger,
                                 "cron",
                                 id=trigger.id,
                                 max_instances=1,

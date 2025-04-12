@@ -35,8 +35,9 @@ dbus:
             - method: OpenUri
 
       flows:
-        - name: "MPRIS publish state on schedule"
+        - name: "MPRIS publish player state"
           triggers:
+            - type: bus_name_added
             - type: schedule
               interval: {seconds: 5}
               # - type: dbus_signal
@@ -55,3 +56,12 @@ dbus:
                 bus_name: {{ mpris_bus_name }}
                 {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
                 Volume: {{ dbus_property_get(mpris_bus_name, path, 'org.mpris.MediaPlayer2.Player', 'Volume', 0) }}
+        - name: "MPRIS player removed"
+          triggers:
+            - type: bus_name_removed
+            # filter: # CHECK FOR LAST ONE #
+          actions:
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+              payload_type: json
+              payload_template: "{}"

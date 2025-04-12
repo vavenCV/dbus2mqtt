@@ -102,7 +102,7 @@ def main():
 
     config: Config = cast(Config, parser.instantiate_classes(cfg))
 
-    handler = colorlog.StreamHandler(stream=sys.stdout, )
+    handler = colorlog.StreamHandler(stream=sys.stdout)
     handler.setFormatter(colorlog.ColoredFormatter(
         '%(log_color)s%(levelname)s:%(name)s:%(message)s',
         log_colors={
@@ -113,6 +113,7 @@ def main():
             "CRITICAL": "bold_red",
         }
     ))
+
     if cfg.verbose:
         logging.basicConfig(level=logging.DEBUG, handlers=[handler])
     else:

@@ -59,7 +59,17 @@ class FlowTriggerDbusSignalConfig:
     path: str | None = None
     filter: str | None = None
 
-FlowTriggerConfig = FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig
+@dataclass
+class FlowTriggerBusNameAddedConfig:
+    type: Literal["bus_name_added"]
+    filter: str | None = None
+
+@dataclass
+class FlowTriggerBusNameRemovedConfig:
+    type: Literal["bus_name_removed"]
+    filter: str | None = None
+
+FlowTriggerConfig = FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig | FlowTriggerBusNameAddedConfig | FlowTriggerBusNameRemovedConfig
 
 @dataclass
 class FlowActionContextSet:
@@ -91,6 +101,7 @@ class SubscriptionConfig:
     path: str
     interfaces: list[InterfaceConfig] = field(default_factory=list)
     flows: list[FlowConfig] = field(default_factory=list)
+    id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
 @dataclass
 class DbusConfig:
