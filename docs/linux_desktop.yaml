@@ -13,23 +13,23 @@ dbus:
         - interface: org.freedesktop.DBus.Properties
           signals:
             - signal: PropertiesChanged
-              # filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+            # filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
           methods:
             - method: GetAll
 
-        # - interface: org.mpris.MediaPlayer2
-        #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-        #   methods:
-        #     - method: Quit
+            # - interface: org.mpris.MediaPlayer2
+            #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            #   methods:
+            #     - method: Quit
 
-        # - interface: org.mpris.MediaPlayer2.Player
-        #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-        #   methods:
-        #     - method: Pause
-        #     - method: Play
-        #     - method: PlayPause
-        #     - method: OpenUri
-        #     - method: Stop
+            # - interface: org.mpris.MediaPlayer2.Player
+            #   mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+            #   methods:
+            #     - method: Pause
+            #     - method: Play
+            #     - method: PlayPause
+            #     - method: OpenUri
+            #     - method: Stop
 
       flows:
         - name: "publish state on schedule"

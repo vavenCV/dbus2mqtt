@@ -75,7 +75,7 @@ media_player:
 
         media_content_type_template: music  # needed to show 'artist'
         media_duration_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:length'] }}"
-        media_image_url_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:artUrl'] }}"
+        # media_image_url_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:artUrl'] }}"
         album_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:album'] }}"
         artist_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:artist'] | first }}"
 
