@@ -1,12 +1,17 @@
 # dbus2mqtt
 
-A Python application that let you expose Linux dbus commands and signals on MQTT topics.
+**dbus2mqtt** is a Python application that bridges **Linux D-Bus** with **MQTT**.
+It lets you forward D-Bus signals and properties to MQTT topics, call D-Bus methods via MQTT messages, and shape payloads using flexible **Jinja2 templating**.
 
-Features
+This makes it easy to integrate Linux desktop services or system signals into MQTT-based workflows - including **Home Assistant**.
 
-* Dbus signal forwarding to MQTT
-* MQTT payload transformation using Jinja templating
-* MQTT payload enrichment with additional dbus calls
+## ✨ Features
+
+* 🔗 Forward **D-Bus signals** to MQTT topics.
+* 🧠 Enrich or transform **MQTT payloads** using Jinja2 templates and dynamic D-Bus calls.
+* ⚡ Trigger message publishing via **signals, timers, property changes, or startup events**.
+* 📡 Expose **D-Bus methods** for remote control via MQTT messages.
+* 🏠 Includes example configurations for **MPRIS** and **Home Assistant Media Player** integration.
 
 Feature TODO list
 
