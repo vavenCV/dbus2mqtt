@@ -44,7 +44,6 @@ dbus:
 
 MQTT connection details can either be configured in that same `config.yaml` file or in a `.env`.
 
-
 ```bash
 MQTT__HOST=localhost
 MQTT__PORT=1883
