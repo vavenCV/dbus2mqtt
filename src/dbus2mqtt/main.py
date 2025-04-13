@@ -6,9 +6,8 @@ from typing import cast
 
 import colorlog
 import dbus_next.aio as dbus_aio
+import dotenv
 import jsonargparse
-
-from dotenv import load_dotenv
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import Config
@@ -85,11 +84,15 @@ async def run(config: Config):
     except asyncio.CancelledError:
         pass
 
-
 def main():
 
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+
     # load environment from .env if it exists
-    load_dotenv()
+    dotenv_file = dotenv.find_dotenv(usecwd=True)
+    if len(dotenv_file) > 0:
+        logger.info(f"Loaded environment variables from {dotenv_file}")
+        dotenv.load_dotenv(dotenv_path=dotenv_file)
 
     # unless specified otherwise, load config from config.yaml
     parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"], default_env=True, env_prefix=False)
@@ -107,7 +110,6 @@ def main():
         '%(log_color)s%(levelname)s:%(name)s:%(message)s',
         log_colors={
             "DEBUG": "light_black",
-            # "INFO": "green",
             "WARNING": "yellow",
             "ERROR": "red",
             "CRITICAL": "bold_red",
