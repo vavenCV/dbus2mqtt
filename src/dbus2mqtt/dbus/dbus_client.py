@@ -176,7 +176,7 @@ class DbusClient:
 
         new_subscriped_interfaces = await self._visit_bus_name_path(bus_name, "/")
 
-        logger.info(f"new_subscriptions: {[si.bus_name for si in new_subscriped_interfaces]}")
+        logger.info(f"new_subscriptions: {list(set([si.bus_name for si in new_subscriped_interfaces]))}")
 
         # setup and process triggers for each flow in each subscription
         processed_new_subscriptions: set[str] = set()
