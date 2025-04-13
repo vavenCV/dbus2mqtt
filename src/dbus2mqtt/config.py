@@ -2,9 +2,9 @@ import fnmatch
 import uuid
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 
 from dbus2mqtt.template.templating import TemplateEngine
 
@@ -69,7 +69,11 @@ class FlowTriggerBusNameRemovedConfig:
     type: Literal["bus_name_removed"]
     filter: str | None = None
 
-FlowTriggerConfig = FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig | FlowTriggerBusNameAddedConfig | FlowTriggerBusNameRemovedConfig
+
+FlowTriggerConfig = Annotated[
+    FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig | FlowTriggerBusNameAddedConfig | FlowTriggerBusNameRemovedConfig,
+    Field(discriminator="type")
+]
 
 @dataclass
 class FlowActionContextSet:
@@ -86,7 +90,10 @@ class FlowActionMqttPublish:
     or a string if payload_type is text"""
     payload_type: Literal["json", "yaml", "text"] = "json"
 
-FlowActionConfig = FlowActionMqttPublish | FlowActionContextSet
+FlowActionConfig = Annotated[
+    FlowActionMqttPublish | FlowActionContextSet,
+    Field(discriminator="type")
+]
 
 @dataclass
 class FlowConfig:

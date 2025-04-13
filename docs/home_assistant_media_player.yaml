@@ -48,6 +48,8 @@ dbus:
             - type: context_set
               context:
                 mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
+                # player_properties: |
+                #   {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
                 path: /org/mpris/MediaPlayer2
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
@@ -64,4 +66,5 @@ dbus:
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
               payload_type: json
-              payload_template: "{}"
+              payload_template:
+                PlaybackStatus: "Off"
