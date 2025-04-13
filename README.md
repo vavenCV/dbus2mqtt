@@ -71,11 +71,14 @@ docker run --detach --name dbus2mqtt \
   --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
   --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
   --user $(id -u):$(id -g) \
-  --volume /run/user/1000/bus:/run/user/1000/bus \
+  --volume /run/user:/run/user \
   --env-file "$HOME"/.config/dbus2mqtt/.env \
   --privileged \
+  --restart unless-stopped \
   jwnmulder/dbus2mqtt \
   --config "$HOME"/.config/dbus2mqtt/config.yaml
+
+sudo docker logs dbus2mqtt -f
 ```
 
 ## Examples
