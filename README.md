@@ -62,7 +62,20 @@ python -m dbus2mqtt --config config.yaml
 To run dbus2mqtt using Docker
 
 ```bash
-# TODO
+mkdir -p $HOME/.config/dbus2mqtt
+cp docs/home_assistant_media_player.yaml $HOME/.config/dbus2mqtt/config.yaml
+cp .env.example $HOME/.config/dbus2mqtt/.env
+
+docker build -t jwnmulder/dbus2mqtt:latest .
+docker run --detach --name dbus2mqtt \
+  --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
+  --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+  --user $(id -u):$(id -g) \
+  --volume /run/user/1000/bus:/run/user/1000/bus \
+  --env-file "$HOME"/.config/dbus2mqtt/.env \
+  --privileged \
+  jwnmulder/dbus2mqtt \
+  --config "$HOME"/.config/dbus2mqtt/config.yaml
 ```
 
 ## Examples

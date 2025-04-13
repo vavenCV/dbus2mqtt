@@ -1,0 +1,14 @@
+# Ignore everything
+*
+
+# Allow files and directories
+!/src
+!/tests
+!/docs/**.yaml
+
+!/pyproject.toml
+!/uv.lock
+!/.python-version
+
+!/LICENSE
+!/README.md
