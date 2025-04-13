@@ -44,7 +44,6 @@ Create the MQTT sensor for topic `dbus2mqtt/org.mpris.MediaPlayer2/state` and th
 mqtt:
   sensor:
     - name: "MPRIS Media Player"
-      unique_id: fa21260f-d85d-478f-9b1f-da2887eba441
       state_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       json_attributes_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       value_template: >-
@@ -62,9 +61,8 @@ mqtt:
 media_player:
   - platform: media_player_template
     media_players:
-      mpris:
+      mpris_media_player:
         # device_class: receiver
-        unique_id: 96ff0e0d-9b58-4661-bde3-15162c95e933
         friendly_name: MPRIS Media Player
         value_template: "{{ states('sensor.mpris_media_player') }}"
 
@@ -75,9 +73,17 @@ media_player:
 
         media_content_type_template: music  # needed to show 'artist'
         media_duration_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:length'] }}"
-        # media_image_url_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:artUrl'] }}"
         album_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:album'] }}"
         artist_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:artist'] | first }}"
+
+        # mpris:artUrl is referencing a local file when firefox is used, for now this will provide Youtube img support
+        media_image_url_template: >-
+          {{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:url']
+            | regex_replace(
+                find='https:\/\/www\\.youtube\\.com\/watch\\?v=(.*)',
+                replace='https://img.youtube.com/vi/\\1/maxresdefault.jpg'
+              )
+          }}
 
         turn_off:
           service: mqtt.publish
