@@ -23,11 +23,6 @@ jobs:
         with:
           python-version-file: ".python-version"
 
-      # - uses: astral-sh/setup-uv@v5
-      #   with:
-      #     pyproject-file: pyproject.toml
-      #     python-version: 3.12
-
       - name: Uv sync
         run: uv sync
 
