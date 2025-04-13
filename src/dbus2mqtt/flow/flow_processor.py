@@ -44,7 +44,7 @@ class FlowScheduler:
                     if existing_job:
                         logger.debug(f"Skipping creation, flow scheduler already exists, id={trigger.id}")
                     if not existing_job and trigger.type == "schedule":
-                        logger.info(f"Starting flow scheduler id={trigger.id}")
+                        logger.info(f"Starting scheduler[{trigger.id}] for flow {flow.id}")
                         if trigger.interval:
                             # Each schedule gets its own job
                             self.scheduler.add_job(
@@ -74,7 +74,7 @@ class FlowScheduler:
         for flow in flows:
             for trigger in flow.triggers:
                 if trigger.type == "schedule":
-                    logger.info(f"Stopping flow scheduler id={trigger.id}")
+                    logger.info(f"Stopping scheduler[{trigger.id}] for flow {flow.id}")
                     self.scheduler.remove_job(trigger.id)
 
 class FlowActionContext:
@@ -158,7 +158,11 @@ class FlowProcessor:
         while True:
             flow_trigger_message = await self.event_broker.flow_trigger_queue.async_q.get()  # Wait for a message
             try:
-                logger.info(f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}")
+                log_message = f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}"
+                if flow_trigger_message.flow_trigger_config.type != "schedule":
+                    logger.info(log_message)
+                else:
+                    logger.debug(log_message)
 
                 flow_id = flow_trigger_message.flow_config.id
                 # flow_name = flow_trigger_message.flow_config.name
