@@ -98,4 +98,4 @@ class MqttClient:
             logger.debug(f"on_message: msg.topic={msg.topic}, msg.payload={json.dumps(json_payload)}")
             self.event_broker.on_mqtt_receive(MqttMessage(msg.topic, json_payload))
         except json.JSONDecodeError as e:
-            logger.warning(f"on_message: Unexpected payload, expection json, topic={msg.topic}, payload={payload}, error={e}")
+            logger.warning(f"on_message: Unexpected payload, expecting json, topic={msg.topic}, payload={payload}, error={e}")

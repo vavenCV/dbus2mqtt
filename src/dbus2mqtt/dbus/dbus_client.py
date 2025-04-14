@@ -19,7 +19,7 @@ from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 logger = logging.getLogger(__name__)
 
 # dbus_next path to support https://docs.flatpak.org/en/latest/portal-api-reference.html
-# Altough not correct, flatpak exposes properties with names containing '-'
+# Although not correct, flatpak exposes properties with names containing '-'
 # This is failing assertions in dbus_next
 # original: r'^[A-Za-z_][A-Za-z0-9_]*$'
 # patched:  r'^[A-Za-z_][A-Za-z0-9_-]*$'
