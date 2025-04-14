@@ -1,6 +1,6 @@
 # Developing on dbus2mqtt
 
-## Running from source 
+## Running from source
 
 ```bash
 uv run main.py --config config.yaml
