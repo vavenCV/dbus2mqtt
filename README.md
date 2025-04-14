@@ -62,11 +62,15 @@ MQTT__USERNAME=
 MQTT__PASSWORD=
 ```
 
+### Running from source
+
 To run dbus2mqtt from source (requires uv to be installed)
 
 ```bash
 uv run main.py --config config.yaml
 ```
+
+### Run using docker with auto start behavior
 
 To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](docs/examples/home_assistant_media_player.yaml) example from this repository
 
@@ -100,6 +104,29 @@ sudo docker logs dbus2mqtt -f
 This repository contains some examples under [docs/examples](docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md)
 
 ## Configuration reference
+
+dbus2mqtt leverages [jsonargparse](https://jsonargparse.readthedocs.io/en/stable/) which allows configuration via either yaml configuration, CLI or environment variables. Until this is fully documented have a look at the examples in this repository.
+
+### MQTT and D-Bus connection details
+
+```bash
+# dbus_next configuration
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+
+# dbus2mqtt configuration
+MQTT__HOST=localhost
+MQTT__PORT=1883
+MQTT__USERNAME=
+MQTT__PASSWORD=
+```
+
+or 
+
+```yaml
+mqtt:
+  host: localhost
+  port: 1883
+```
 
 ### Exposing dbus methods
 
