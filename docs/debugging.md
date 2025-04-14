@@ -1,4 +1,4 @@
-# Developing on dbus2mqtt
+# Debugging
 
 ## Running from source
 
