@@ -120,7 +120,7 @@ MQTT__USERNAME=
 MQTT__PASSWORD=
 ```
 
-or 
+or
 
 ```yaml
 mqtt:
