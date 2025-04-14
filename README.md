@@ -8,41 +8,52 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 ## ✨ Features
 
 * 🔗 Forward **D-Bus signals** to MQTT topics.
-* 🧠 Enrich or transform **MQTT payloads** using Jinja2 templates and dynamic D-Bus calls.
+* 🧠 Enrich or transform **MQTT payloads** using Jinja2 templates and additional D-Bus calls.
 * ⚡ Trigger message publishing via **signals, timers, property changes, or startup events**.
 * 📡 Expose **D-Bus methods** for remote control via MQTT messages.
 * 🏠 Includes example configurations for **MPRIS** and **Home Assistant Media Player** integration.
 
-Feature TODO list
+TODO list
 
-* Remove dependency between dbus signal handling and message publishing. Allow for multiple trigger types to publish payloads. Message publishing can be triggerd by timer/initial start/property change signal. Needed because the PropertiesChanged signal is not triggered for all properties like 'Position'
-* Stability testing and play around with dbus-next to see how it behaves. An alternative might be python-sdbus
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expection json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
-* when MPRIS player disconnects, allow to publish a 'Stopped playing / quit' message on mqtt
 * Property set only works the first time, need to restart after which the first set will work again
 * Print found bus_names at startup (or empty if no matching subscriptions)
+* Create a release on pypiPyPI
+* Release a docker image
 
 ## Getting started with dbus2mqtt
 
-Create a `config.yaml` file which configures with dbus services to expose. Use the following as a minimal example to get started. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic.
+Create a `config.yaml` file with the contents shown below. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic. Have a look at [docs/examples](docs/exmaples.md) for more examples
 
 ```yaml
 dbus:
   subscriptions:
     - bus_name: org.mpris.MediaPlayer2.*
       path: /org/mpris/MediaPlayer2
-      # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
       interfaces:
         - interface: org.freedesktop.DBus.Properties
-          signal_handlers:
-            - signal: PropertiesChanged
-              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
+          methods:
+            - method: GetAll
+
+      flows:
+        - name: "Publish MPRIS state"
+          triggers:
+            - type: bus_name_added
+            - type: schedule
+              interval: {seconds: 5}
+          actions:
+            - type: context_set
+              context:
+                mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
+                path: /org/mpris/MediaPlayer2
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+              payload_type: json
               payload_template: |
-                {{ dbus_call('org.freedesktop.DBus.Properties', 'GetAll', 'org.mpris.MediaPlayer2.Player') }}
-              mqtt_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+                {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
 ```
 
-MQTT connection details can either be configured in that same `config.yaml` file or in a `.env`.
+MQTT connection details can be configured in that same `config.yaml` file or via environment variables. For now create a `.env` file with the following contents.
 
 ```bash
 MQTT__HOST=localhost
@@ -51,21 +62,24 @@ MQTT__USERNAME=
 MQTT__PASSWORD=
 ```
 
-To run dbus2mqtt using Python
+To run dbus2mqtt from source (requires uv to be installed)
 
 ```bash
-pip install dbus2mqtt
-python -m dbus2mqtt --config config.yaml
+uv run main.py --config config.yaml
 ```
 
-To run dbus2mqtt using Docker
+To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](docs/examples/home_assistant_media_player.yaml) example from this repository
 
 ```bash
+# setup configuration
 mkdir -p $HOME/.config/dbus2mqtt
-cp docs/home_assistant_media_player.yaml $HOME/.config/dbus2mqtt/config.yaml
+cp docs/examples/home_assistant_media_player.yaml $HOME/.config/dbus2mqtt/config.yaml
 cp .env.example $HOME/.config/dbus2mqtt/.env
 
+# build image
 docker build -t jwnmulder/dbus2mqtt:latest .
+
+# run image and automatically start on reboot
 docker run --detach --name dbus2mqtt \
   --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
   --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
@@ -77,16 +91,17 @@ docker run --detach --name dbus2mqtt \
   jwnmulder/dbus2mqtt \
   --config "$HOME"/.config/dbus2mqtt/config.yaml
 
+# view logs
 sudo docker logs dbus2mqtt -f
 ```
 
 ## Examples
 
-Also see ./docs/
+This repository contains some examples under [docs/examples](docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md)
 
-## Configuration reference by example
+## Configuration reference
 
-### dbus interface methods
+### Exposing dbus methods
 
 ```yaml
 dbus:
@@ -95,58 +110,55 @@ dbus:
       path: /org/mpris/MediaPlayer2
       interfaces:
         - interface: org.mpris.MediaPlayer2.Player
+          mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
           methods:
             - method: Pause
             - method: Play
-            - method: PlayPause
-            - method: OpenUri
-            - method: Stop
 ```
 
-This configuration will expose 4 methods. Triggering methods can be done by publishing json messages to the corresponding topics.
-
-The exact arguments to be provided depends on the dbus interface being exposed. For MPRIS these can be found here: <https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html>
-
-topic: "dbus2mqtt/org.mpris.MediaPlayer2/?/command"
+This configuration will expose 2 methods. Triggering methods can be done by publishing json messages to the `dbus2mqtt/org.mpris.MediaPlayer2/command` MQTT topic. Arguments can be passed along in `args`
 
 ```json
 {
-    "method" : "PlayPause",
+    "method" : "Play",
 }
 ```
 
 ```json
 {
     "method" : "OpenUri",
-    "args":{
-        "0": "..."
-    }
+    "args": []
 }
 ```
 
-### Jinja templating
+### Exposing dbus signals
 
-## Running from source
+Publishing signals to MQTT topics works by subscribing to the relevant signal and using flows for publishing
 
-Running from source can be done using `uv`
+```yaml
+dbus:
+  subscriptions:
+    - bus_name: org.mpris.MediaPlayer2.*
+      path: /org/mpris/MediaPlayer2
+      interfaces:
+        - interface: org.freedesktop.DBus.Properties
+           signals:
+             - signal: PropertiesChanged
 
-```bash
-uv run main.py --config config.yaml
+      flows:
+        - name: "Property Changed flow"
+          triggers:
+            - type: on_signal
+          actions:
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/signals/PropertiesChanged
+              payload_type: json
 ```
 
-### dbus debugging
+## Flows
 
-```bash
-uv run dbus2mqtt
+TODO: Document flows, for now see the [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md) example
 
-# https://dbus.freedesktop.org/doc/dbus-tutorial.html
-# https://dbus.freedesktop.org/doc/dbus-specification.html
-dbus-monitor
+## Jinja templating
 
-busctl --user introspect org.freedesktop.DBus /org/freedesktop/DBus
-
-playerctl -l
-busctl --user introspect org.mpris.MediaPlayer2.vlc /org/mpris/MediaPlayer2
-
-dbus-send --print-reply --session --dest=org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus.ListNames | grep mpris
-```
+TODO: Document Jinja templating, for now see the [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md) example
