@@ -13,7 +13,7 @@ Features:
 * dbus subscription using `org.mpris.MediaPlayer2.*` wildcard to support multiple concurrent MRPIS players
 * Every 5 seconds, the state if the `first` known MPRIS player is published to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 * Every MPRIS property update immediately publishes the state to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
-* Suppport for player commands (see table below)
+* Support for player commands (see table below)
 
 ## Player Commands
 
@@ -36,7 +36,7 @@ For an overview of MPRIS commands have a look at <https://specifications.freedes
 
 ## Home Assistant configuration
 
-Example HASS configuration is based upon <https://github.com/Sennevds/media_player.template/tree/master>
+Example Home Assistant configuration is based upon <https://github.com/Sennevds/media_player.template/tree/master>
 
 Create the MQTT sensor for topic `dbus2mqtt/org.mpris.MediaPlayer2/state` and the Media Player as shown below
 

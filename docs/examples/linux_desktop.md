@@ -1,6 +1,6 @@
 # Linux Desktop
 
-> **Warning:** This is not working, dbus-next is validating propery names and bails on `power-saver-enable`
+> **Warning:** This is not working, dbus-next is validating property names and bails on `power-saver-enable`
 
 Trying out this example
 
