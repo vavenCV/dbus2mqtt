@@ -45,7 +45,7 @@ class FlowTriggerMqttConfig:
 
 @dataclass
 class FlowTriggerScheduleConfig:
-    type: Literal["schedule"]
+    type: Literal["schedule"] = "schedule"
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     cron: dict[str, Any] | None = None
     interval: dict[str, Any] | None = None
@@ -76,30 +76,30 @@ FlowTriggerConfig = Annotated[
 ]
 
 @dataclass
-class FlowActionContextSet:
-    type: Literal["context_set"]
+class FlowActionContextSetConfig:
+    type: Literal["context_set"] = "context_set"
     context: dict[str, Any] | None = None
     global_context: dict[str, Any] | None = None
 
 @dataclass
-class FlowActionMqttPublish:
-    type: Literal["mqtt_publish"]
+class FlowActionMqttPublishConfig:
     topic: str
     payload_template: str | dict[str, Any]
     """should be a dict if payload_type is json/yaml
     or a string if payload_type is text"""
+    type: Literal["mqtt_publish"] = "mqtt_publish"
     payload_type: Literal["json", "yaml", "text"] = "json"
 
 FlowActionConfig = Annotated[
-    FlowActionMqttPublish | FlowActionContextSet,
+    FlowActionMqttPublishConfig | FlowActionContextSetConfig,
     Field(discriminator="type")
 ]
 
 @dataclass
 class FlowConfig:
-    name: str
     triggers: list[FlowTriggerConfig]
     actions: list[FlowActionConfig]
+    name: str | None = None
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
 @dataclass

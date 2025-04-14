@@ -4,7 +4,7 @@ from typing import Any
 
 class FlowExecutionContext:
 
-    def __init__(self, name: str, global_flows_context: dict[str, Any], flow_context: dict[str, Any]):
+    def __init__(self, name: str | None, global_flows_context: dict[str, Any], flow_context: dict[str, Any]):
         self.name = name
         self.global_flows_context = global_flows_context
         self.flow_context = flow_context

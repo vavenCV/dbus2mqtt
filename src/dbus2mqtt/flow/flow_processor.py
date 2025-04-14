@@ -158,22 +158,25 @@ class FlowProcessor:
         while True:
             flow_trigger_message = await self.event_broker.flow_trigger_queue.async_q.get()  # Wait for a message
             try:
-                log_message = f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}"
-                if flow_trigger_message.flow_trigger_config.type != "schedule":
-                    logger.info(log_message)
-                else:
-                    logger.debug(log_message)
-
-                flow_id = flow_trigger_message.flow_config.id
-                # flow_name = flow_trigger_message.flow_config.name
-
-                flow = self._flows[flow_id]
-                await flow.execute_actions(trigger_context=flow_trigger_message.context)
+                await self._process_flow_trigger(flow_trigger_message)
 
             except Exception as e:
                 logger.warning(f"flow_processor_task: Exception {e}", exc_info=True)
             finally:
                 self.event_broker.flow_trigger_queue.async_q.task_done()
+
+    async def _process_flow_trigger(self, flow_trigger_message: FlowTriggerMessage):
+        log_message = f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}"
+        if flow_trigger_message.flow_trigger_config.type != "schedule":
+            logger.info(log_message)
+        else:
+            logger.debug(log_message)
+
+        flow_id = flow_trigger_message.flow_config.id
+        # flow_name = flow_trigger_message.flow_config.name
+
+        flow = self._flows[flow_id]
+        await flow.execute_actions(trigger_context=flow_trigger_message.context)
 
 # # Create a flow from the YAML configuration
 # for flow_config in config['flows']:

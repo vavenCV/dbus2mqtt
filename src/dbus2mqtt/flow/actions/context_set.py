@@ -1,14 +1,14 @@
 import logging
 
 from dbus2mqtt import AppContext
-from dbus2mqtt.config import FlowActionContextSet
+from dbus2mqtt.config import FlowActionContextSetConfig
 from dbus2mqtt.flow import FlowAction, FlowExecutionContext
 
 logger = logging.getLogger(__name__)
 
 class ContextSetAction(FlowAction):
 
-    def __init__(self, config: FlowActionContextSet, app_context: AppContext):
+    def __init__(self, config: FlowActionContextSetConfig, app_context: AppContext):
         self.config = config
         self.templating = app_context.templating
 

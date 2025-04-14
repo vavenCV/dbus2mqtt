@@ -4,7 +4,7 @@ import logging
 from jinja2.exceptions import TemplateRuntimeError
 
 from dbus2mqtt import AppContext
-from dbus2mqtt.config import FlowActionMqttPublish
+from dbus2mqtt.config import FlowActionMqttPublishConfig
 from dbus2mqtt.flow import FlowAction, FlowExecutionContext
 from dbus2mqtt.mqtt.mqtt_client import MqttMessage
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class MqttPublishAction(FlowAction):
 
-    def __init__(self, config: FlowActionMqttPublish, app_context: AppContext):
+    def __init__(self, config: FlowActionMqttPublishConfig, app_context: AppContext):
         self.config = config
         self.event_broker = app_context.event_broker
         self.templating = app_context.templating
