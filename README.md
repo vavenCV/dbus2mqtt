@@ -82,10 +82,10 @@ docker build -t jwnmulder/dbus2mqtt:latest .
 # run image and automatically start on reboot
 docker run --detach --name dbus2mqtt \
   --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
-  --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
-  --user $(id -u):$(id -g) \
   --volume /run/user:/run/user \
+  --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
   --env-file "$HOME"/.config/dbus2mqtt/.env \
+  --user $(id -u):$(id -g) \
   --privileged \
   --restart unless-stopped \
   jwnmulder/dbus2mqtt \
