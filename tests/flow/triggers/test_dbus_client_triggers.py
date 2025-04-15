@@ -134,9 +134,6 @@ async def test_dbus_signal_trigger():
     }
 
 class MockedMessageBus(dbus_aio.message_bus.MessageBus):
-    def __init__(self, bus_address = None, bus_type = None, auth = None, negotiate_unix_fd=False):
-        super().__init__(bus_address, bus_type, auth, negotiate_unix_fd)
-
     def _setup_socket(self):
         self._stream = ""
         self._sock = ""
