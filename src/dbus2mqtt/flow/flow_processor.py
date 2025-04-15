@@ -119,7 +119,6 @@ class FlowProcessor:
 
     def __init__(self, app_context: AppContext):
         self.app_context = app_context
-        self.global_flows_context = app_context.config
         self.event_broker = app_context.event_broker
 
         self._global_context: dict[str, Any] = {}

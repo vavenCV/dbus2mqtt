@@ -86,8 +86,6 @@ async def run(config: Config):
 
 def main():
 
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-
     # load environment from .env if it exists
     dotenv_file = dotenv.find_dotenv(usecwd=True)
     if len(dotenv_file) > 0:

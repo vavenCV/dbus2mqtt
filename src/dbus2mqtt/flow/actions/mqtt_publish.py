@@ -24,7 +24,7 @@ class MqttPublishAction(FlowAction):
         try:
             mqtt_topic = await self.templating.async_render_template(self.config.topic, str, render_context)
 
-            payload_res_type = str if self.config.payload_type == "test" else dict
+            payload_res_type = str if self.config.payload_type == "text" else dict
             payload = await self.templating.async_render_template(self.config.payload_template, payload_res_type, render_context)
 
         except TemplateRuntimeError as e:

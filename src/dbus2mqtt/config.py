@@ -29,7 +29,7 @@ class PropertyConfig:
 @dataclass
 class InterfaceConfig:
     interface: str
-    mqtt_call_method_topic: str | None
+    mqtt_call_method_topic: str | None = None
     signals: list[SignalConfig] = field(default_factory=list)
     methods: list[MethodConfig] = field(default_factory=list)
     properties: list[PropertyConfig] = field(default_factory=list)
@@ -52,23 +52,22 @@ class FlowTriggerScheduleConfig:
 
 @dataclass
 class FlowTriggerDbusSignalConfig:
-    type: Literal["dbus_signal"]
     interface: str
     signal: str
+    type: Literal["dbus_signal"] = "dbus_signal"
     bus_name: str | None = None
     path: str | None = None
     filter: str | None = None
 
 @dataclass
 class FlowTriggerBusNameAddedConfig:
-    type: Literal["bus_name_added"]
+    type: Literal["bus_name_added"] = "bus_name_added"
     filter: str | None = None
 
 @dataclass
 class FlowTriggerBusNameRemovedConfig:
-    type: Literal["bus_name_removed"]
+    type: Literal["bus_name_removed"] = "bus_name_removed"
     filter: str | None = None
-
 
 FlowTriggerConfig = Annotated[
     FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig | FlowTriggerBusNameAddedConfig | FlowTriggerBusNameRemovedConfig,
@@ -105,7 +104,9 @@ class FlowConfig:
 @dataclass
 class SubscriptionConfig:
     bus_name: str
+    """bus_name pattern supporting * wildcards"""
     path: str
+    """path pattern supporting * wildcards"""
     interfaces: list[InterfaceConfig] = field(default_factory=list)
     flows: list[FlowConfig] = field(default_factory=list)
     id: str = field(default_factory=lambda: uuid.uuid4().hex)

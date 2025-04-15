@@ -2,7 +2,14 @@
 from pydantic import SecretStr
 
 from dbus2mqtt import AppContext, config
+from dbus2mqtt.config import (
+    FlowActionConfig,
+    FlowConfig,
+    FlowTriggerConfig,
+    InterfaceConfig,
+)
 from dbus2mqtt.event_broker import EventBroker
+from dbus2mqtt.flow.flow_processor import FlowProcessor
 from dbus2mqtt.template.templating import TemplateEngine
 
 
@@ -13,6 +20,12 @@ def mocked_app_context():
             config.SubscriptionConfig(
                 bus_name="test.bus_name.*",
                 path="/",
+                interfaces=[
+                    InterfaceConfig(
+                        interface="test-interface-name"
+                    )
+                ]
+
             )
         ]
     ),
@@ -29,3 +42,12 @@ def mocked_app_context():
     app_context = AppContext(test_config, event_broker, template_engine)
 
     return app_context
+
+def mocked_flow_processor(app_context: AppContext, trigger_config: FlowTriggerConfig, actions: list[FlowActionConfig]):
+
+    flow_config = FlowConfig(triggers=[trigger_config], actions=actions)
+
+    app_context.config.dbus.subscriptions[0].flows = [flow_config]
+
+    processor = FlowProcessor(app_context)
+    return processor, flow_config
