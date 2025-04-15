@@ -133,9 +133,18 @@ async def test_dbus_signal_trigger():
         "args": ["first-arg", "second-arg"]
     }
 
+class MockedMessageBus(dbus_aio.message_bus.MessageBus):
+    def __init__(self, bus_address = None, bus_type = None, auth = None, negotiate_unix_fd=False):
+        super().__init__(bus_address, bus_type, auth, negotiate_unix_fd)
+
+    def _setup_socket(self):
+        self._stream = ""
+        self._sock = ""
+        self._fd = ""
+
 def _mocked_dbus_client(app_context: AppContext):
 
-    bus = dbus_aio.message_bus.MessageBus(bus_address="unix:path=/run/user/1000/bus")
+    bus = MockedMessageBus(bus_address="unix:path=/run/user/1000/bus")
     flow_scheduler = FlowScheduler(app_context)
 
     dbus_client = DbusClient(app_context, bus, flow_scheduler)
