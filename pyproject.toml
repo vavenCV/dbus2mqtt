@@ -44,6 +44,7 @@ lint-pyright = "pyright"
 [tool.pytest.ini_options]
 addopts = "-s"
 testpaths = ["tests"]
+pythonpath = "."
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.pyright]
