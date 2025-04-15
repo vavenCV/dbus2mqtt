@@ -135,7 +135,7 @@ async def test_dbus_signal_trigger():
 
 def _mocked_dbus_client(app_context: AppContext):
 
-    bus = dbus_aio.message_bus.MessageBus()
+    bus = dbus_aio.message_bus.MessageBus(bus_address="unix:path=/run/user/1000/bus")
     flow_scheduler = FlowScheduler(app_context)
 
     dbus_client = DbusClient(app_context, bus, flow_scheduler)
