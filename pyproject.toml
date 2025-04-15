@@ -1,9 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "dbus2mqtt"
 version = "0.1.0"
-description = "Add your description here"
+description = """"\
+    A Python tool to expose Linux D-Bus signals, methods and properties over MQTT \
+    - featuring templating, payload enrichment and Home Assistant-ready examples \
+    """
 readme = "README.md"
+license = "MIT"
+keywords = ["python", "mqtt", "mpris", "dbus", "home-assistant"]
+classifiers = [
+    # https://pypi.org/classifiers/
+    "Development Status :: 4 - Beta",
+
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+
+    # Supported Python versions
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+
 requires-python = ">=3.12"
+
 dependencies = [
     "apscheduler>=3.11.0",
     "colorlog>=6.9.0",
@@ -18,13 +40,6 @@ dependencies = [
     "schedule>=1.2.2",
 ]
 
-[project.scripts]
-dbus2mqtt = "dbus2mqtt.main:main"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
@@ -36,6 +51,16 @@ dev = [
     "pip>=25.0.1",
     "pytest-asyncio>=0.26.0",
 ]
+
+[project.urls]
+# Homepage = "https://example.com"
+# Documentation = "https://readthedocs.org"
+Repository = "https://github.com/jwnmulder/dbus2mqtt.git"
+Issues = "https://github.com/jwnmulder/dbus2mqtt/issues"
+# Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+
+[project.scripts]
+dbus2mqtt = "dbus2mqtt.main:main"
 
 [tool.taskipy.tasks]
 lint-ruff = "ruff check"
@@ -52,9 +77,6 @@ venvPath = "."
 venv = ".venv"
 
 typeCheckingMode = "basic"
-
-# This does not work with dynamic dbus proxies
-reportAttributeAccessIssue = false
 
 [tool.ruff.lint]
 extend-select = [
