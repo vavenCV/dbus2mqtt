@@ -51,10 +51,10 @@ class DbusClient:
             dbus_interface = obj.get_interface('org.freedesktop.DBus')
 
             # subscribe to NameOwnerChanged which allows us to detect new bus_names
-            dbus_interface.on_name_owner_changed(self._dbus_name_owner_changed_callback)
+            dbus_interface.__getattribute__("on_name_owner_changed")(self._dbus_name_owner_changed_callback)
 
             # subscribe to existing registered bus_names we are interested in
-            connected_bus_names = await dbus_interface.call_list_names()
+            connected_bus_names = await dbus_interface.__getattribute__("call_list_names")()
 
             for bus_name in connected_bus_names:
                 await self._handle_bus_name_added(bus_name)
