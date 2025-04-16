@@ -1,5 +1,7 @@
 # dbus2mqtt
 
+> **⚠️ Warning:** This project has no releases yet. Running from source works. No Docker images or Python packages are available at this time.
+
 **dbus2mqtt** is a Python application that bridges **Linux D-Bus** with **MQTT**.
 It lets you forward D-Bus signals and properties to MQTT topics, call D-Bus methods via MQTT messages, and shape payloads using flexible **Jinja2 templating**.
 
