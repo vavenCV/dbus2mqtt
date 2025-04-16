@@ -15,12 +15,10 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 
 TODO list
 
-* Support signals with more or less than 3 arguments (hardcoded now)
 * Create a release on PyPI
 * Release a docker image
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expecting json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
 * Property set only works the first time, need to restart after which the first set will work again
-* Print found bus_names at startup (or empty if no matching subscriptions)
 
 ## Getting started with dbus2mqtt
 

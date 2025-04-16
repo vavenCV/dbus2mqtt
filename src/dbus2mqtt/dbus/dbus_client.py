@@ -12,7 +12,11 @@ import dbus_next.introspection as dbus_introspection
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import InterfaceConfig, SubscriptionConfig
 from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions, SubscribedInterface
-from dbus2mqtt.dbus.dbus_util import camel_to_snake, unwrap_dbus_object
+from dbus2mqtt.dbus.dbus_util import (
+    camel_to_snake,
+    unwrap_dbus_object,
+    unwrap_dbus_objects,
+)
 from dbus2mqtt.event_broker import DbusSignalWithState, MqttMessage
 from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 
@@ -56,8 +60,11 @@ class DbusClient:
             # subscribe to existing registered bus_names we are interested in
             connected_bus_names = await dbus_interface.__getattribute__("call_list_names")()
 
+            new_subscriped_interfaces: list[SubscribedInterface] = []
             for bus_name in connected_bus_names:
-                await self._handle_bus_name_added(bus_name)
+                new_subscriped_interfaces.extend(await self._handle_bus_name_added(bus_name))
+
+            logger.info(f"subscriptions on startup: {list(set([si.bus_name for si in new_subscriped_interfaces]))}")
 
     def get_proxy_object(self, bus_name: str, path: str) -> dbus_aio.proxy_object.ProxyObject | None:
 
@@ -83,6 +90,25 @@ class DbusClient:
 
         return proxy_object, bus_name_subscriptions
 
+    def _dbus_next_signal_publisher(self, dbus_signal_state: dict[str, Any], *args):
+        unwrapped_args = unwrap_dbus_objects(args)
+        self.event_broker.on_dbus_signal(
+            DbusSignalWithState(**dbus_signal_state, args=unwrapped_args)
+        )
+
+    def _dbus_next_signal_handler(self, signal: dbus_introspection.Signal, state: dict[str, Any]) -> Any:
+        expected_args = len(signal.args)
+
+        if expected_args == 1:
+            return lambda a: self._dbus_next_signal_publisher(state, a)
+        elif expected_args == 2:
+            return lambda a, b: self._dbus_next_signal_publisher(state, a, b)
+        elif expected_args == 3:
+            return lambda a, b, c: self._dbus_next_signal_publisher(state, a, b, c)
+        elif expected_args == 4:
+            return lambda a, b, c, d: self._dbus_next_signal_publisher(state, a, b, c, d)
+        raise ValueError("Unsupported nr of arguments")
+
     async def _subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, subscription_config: SubscriptionConfig, si: InterfaceConfig) -> SubscribedInterface:
 
         proxy_object, bus_name_subscriptions = self._ensure_proxy_object_subscription(bus_name, path, introspection)
@@ -97,21 +123,16 @@ class DbusClient:
             if interface_signal:
 
                 on_signal_method_name = "on_" + camel_to_snake(signal_config.signal)
-                obj_interface.__getattribute__(on_signal_method_name)(
-                    lambda a, b, c:
-                        self.event_broker.on_dbus_signal(DbusSignalWithState(
-                            bus_name_subscriptions,
-                            path,
-                            interface.name,
-                            subscription_config,
-                            signal_config,
-                            args=[
-                                unwrap_dbus_object(a),
-                                unwrap_dbus_object(b),
-                                unwrap_dbus_object(c)
-                            ]
-                        ))
-                )
+                dbus_signal_state = {
+                    "bus_name_subscriptions": bus_name_subscriptions,
+                    "path": path,
+                    "interface_name": interface.name,
+                    "subscription_config": subscription_config,
+                    "signal_config": signal_config,
+                }
+
+                handler = self._dbus_next_signal_handler(interface_signal, dbus_signal_state)
+                obj_interface.__getattribute__(on_signal_method_name)(handler)
                 logger.info(f"subscribed with signal_handler: signal={signal_config.signal}, bus_name={bus_name}, path={path}, interface={interface.name}")
 
             else:
@@ -167,10 +188,10 @@ class DbusClient:
 
         return new_subscriptions
 
-    async def _handle_bus_name_added(self, bus_name: str):
+    async def _handle_bus_name_added(self, bus_name: str) -> list[SubscribedInterface]:
 
         if not self.config.is_bus_name_configured(bus_name):
-            return
+            return []
 
         # sanity checks
         for umh in self.bus._user_message_handlers:
@@ -205,6 +226,8 @@ class DbusClient:
                 await self._trigger_bus_name_added(subscription_config, subscribed_interface.bus_name)
 
                 processed_new_subscriptions.add(subscription_config.id)
+
+        return new_subscriped_interfaces
 
     async def _trigger_bus_name_added(self, subscription_config: SubscriptionConfig, bus_name: str):
 
