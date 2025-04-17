@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "dbus2mqtt"
 version = "0.1.0"
-description = """"\
+description = """\
     A Python tool to expose Linux D-Bus signals, methods and properties over MQTT \
     - featuring templating, payload enrichment and Home Assistant-ready examples \
     """
