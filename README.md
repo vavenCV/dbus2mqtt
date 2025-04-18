@@ -1,5 +1,11 @@
 # dbus2mqtt
 
+[![GitHub Actions pre-commit status](https://github.com/jwnmulder/dbus2mqtt/workflows/pre-commit/badge.svg)](https://github.com/jwnmulder/dbus2mqtt/actions/workflows/pre-commit.yml?query=branch%3Amain)
+[![GitHub Actions ci status](https://github.com/jwnmulder/dbus2mqtt/workflows/ci/badge.svg)](https://github.com/jwnmulder/dbus2mqtt/actions/workflows/ci.yml?query=branch%3Amain)
+[![Docker Image Size](https://img.shields.io/docker/image-size/jwnmulder/dbus2mqtt.svg)](https://hub.docker.com/r/jwnmulder/dbus2mqtt/)
+[![Docker Image Version](https://img.shields.io/docker/v/jwnmulder/dbus2mqtt)](https://hub.docker.com/r/jwnmulder/dbus2mqtt/)
+
+
 **dbus2mqtt** is a Python application that bridges **Linux D-Bus** with **MQTT**.
 It lets you forward D-Bus signals and properties to MQTT topics, call D-Bus methods via MQTT messages, and shape payloads using flexible **Jinja2 templating**.
 
