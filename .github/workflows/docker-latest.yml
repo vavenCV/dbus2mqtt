@@ -13,6 +13,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Determine version from hatch
+        id: version
+        run: echo "PRETEND_VERSION=$(uvx hatch version)" >> "$GITHUB_OUTPUT"
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -52,3 +56,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: latest
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PRETEND_VERSION=${{ steps.version.outputs.PRETEND_VERSION }}

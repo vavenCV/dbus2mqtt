@@ -5,6 +5,9 @@
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 
+ARG PRETEND_VERSION
+ENV SETUPTOOLS_SCM_PRETEND_VERSION=${PRETEND_VERSION}
+
 # Disable Python downloads, because we want to use the system interpreter
 # across both images. If using a managed Python version, it needs to be
 # copied from the build image into the final image; see `standalone.Dockerfile`
@@ -20,7 +23,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ADD src/ pyproject.toml uv.lock .python-version README.md /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
-
 
 # Then, use a final image without uv
 FROM python:3.13-slim-bookworm
