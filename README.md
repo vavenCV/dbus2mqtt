@@ -1,7 +1,5 @@
 # dbus2mqtt
 
-> **⚠️ Warning:** This project has no releases yet. Running from source works. Docker images and Python packages are planned but not yet available.
-
 **dbus2mqtt** is a Python application that bridges **Linux D-Bus** with **MQTT**.
 It lets you forward D-Bus signals and properties to MQTT topics, call D-Bus methods via MQTT messages, and shape payloads using flexible **Jinja2 templating**.
 
@@ -17,7 +15,6 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 
 TODO list
 
-* Create a release on PyPI
 * Release a docker image
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expecting json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
 * Property set only works the first time, need to restart after which the first set will work again
@@ -63,17 +60,17 @@ MQTT__USERNAME=
 MQTT__PASSWORD=
 ```
 
-### Running from source
-
-To run dbus2mqtt from source (requires uv to be installed)
+### Install and run dbus2mqtt
 
 ```bash
-uv run main.py --config config.yaml
+python -m pip install dbus2mqtt
+dbus2mqtt --config config.yaml
 ```
+
 
 ### Run using docker with auto start behavior
 
-To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](docs/examples/home_assistant_media_player.yaml) example from this repository
+To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](docs/examples/home_assistant_media_player.yaml) example from this repository.
 
 ```bash
 # setup configuration
@@ -102,7 +99,7 @@ sudo docker logs dbus2mqtt -f
 
 ## Examples
 
-This repository contains some examples under [docs/examples](docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md)
+This repository contains examples under [docs/examples](docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md)
 
 ## Configuration reference
 
