@@ -34,6 +34,8 @@ jobs:
           images: |
             jwnmulder/dbus2mqtt
             ghcr.io/jwnmulder/dbus2mqtt
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
@@ -64,7 +66,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.latest
           push: ${{ github.event_name != 'pull_request' }}
-          tags: latest
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             PRETEND_VERSION=${{ steps.version.outputs.PRETEND_VERSION }}
