@@ -4,6 +4,8 @@
     "local>jwnmulder/renovate-config"
   ],
 
+  "labels": ["dependencies"],
+
   "packageRules": [
     {
       "matchFileNames": [".pre-commit-config.yaml"],
