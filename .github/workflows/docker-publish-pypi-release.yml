@@ -28,8 +28,8 @@ jobs:
             jwnmulder/dbus2mqtt
             ghcr.io/jwnmulder/dbus2mqtt
           tags: |
-            type=semver,pattern={{major}},value=${{ matrix.version }},enable=${{ !startsWith(matrix.version, '0.') }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.version }}
+            type=pep440,pattern={{major}},value=${{ matrix.version }},enable=${{ !startsWith(matrix.version, '0.') }}
+            type=pep440,pattern={{major}}.{{minor}},value=${{ matrix.version }}
           # type=ref,event=branch
           # type=ref,event=pr
           # type=semver,pattern={{version}},value=${{ matrix.version }}
