@@ -1,9 +1,9 @@
-name: Build and Push Docker latest
+name: Build and Push Docker Images for Released Versions
 
 "on":
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
@@ -11,23 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+    strategy:
+      matrix:
+        version:
+          - 0.1
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-
-      - name: Determine version from hatch
-        id: version
-        run: echo "PRETEND_VERSION=$(uvx hatch version)" >> "$GITHUB_OUTPUT"
 
       - name: Docker meta
         id: meta
@@ -37,7 +28,11 @@ jobs:
             jwnmulder/dbus2mqtt
             ghcr.io/jwnmulder/dbus2mqtt
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=semver,pattern={{major}},value=${{ matrix.version }},enable=${{ !startsWith(matrix.version, '0.') }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ matrix.version }}
+          # type=ref,event=branch
+          # type=ref,event=pr
+          # type=semver,pattern={{version}},value=${{ matrix.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
@@ -66,9 +61,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./docker/Dockerfile.latest
+          file: ./docker/Dockerfile.pypi
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            PRETEND_VERSION=${{ steps.version.outputs.PRETEND_VERSION }}
