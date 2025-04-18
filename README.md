@@ -78,9 +78,6 @@ mkdir -p $HOME/.config/dbus2mqtt
 cp docs/examples/home_assistant_media_player.yaml $HOME/.config/dbus2mqtt/config.yaml
 cp .env.example $HOME/.config/dbus2mqtt/.env
 
-# build image
-docker build -t jwnmulder/dbus2mqtt:latest .
-
 # run image and automatically start on reboot
 docker run --detach --name dbus2mqtt \
   --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
