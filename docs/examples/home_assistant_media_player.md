@@ -145,7 +145,7 @@ media_player:
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
             payload: >-
-              { "method": "SetPosition", "args": ["{{  state_attr('sensor.mpris_media_player', 'Metadata')['mpris:trackid'] }}", {{ position | int }}] }
+              { "method": "SetPosition", "args": ["{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:trackid'] }}", {{ position | int }}] }
         set_volume:
           service: mqtt.publish
           data:
