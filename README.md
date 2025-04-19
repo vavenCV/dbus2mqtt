@@ -13,9 +13,15 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 * 📡 Expose **D-Bus methods** for remote control via MQTT messages.
 * 🏠 Includes example configurations for **MPRIS** and **Home Assistant Media Player** integration.
 
+## Project status
+
+**dbus2mqtt** is considered stable for the use-cases it has been tested against, and is actively being developed. Documentation is continuously being improved.
+
+Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found here: [home_assistant_media_player.md](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md)
+
+
 TODO list
 
-* Release a docker image
 * Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expecting json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
 * Property set only works the first time, need to restart after which the first set will work again
 
@@ -70,7 +76,7 @@ dbus2mqtt --config config.yaml
 
 ### Run using docker with auto start behavior
 
-To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](docs/examples/home_assistant_media_player.yaml) example from this repository.
+To build and run dbus2mqtt using Docker with the [home_assistant_media_player.yaml](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.yaml) example from this repository.
 
 ```bash
 # setup configuration
@@ -96,7 +102,7 @@ sudo docker logs dbus2mqtt -f
 
 ## Examples
 
-This repository contains examples under [docs/examples](docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md)
+This repository contains examples under [docs/examples](https://github.com/jwnmulder/dbus2mqtt/blob/main//docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md)
 
 ## Configuration reference
 
@@ -179,8 +185,8 @@ dbus:
 
 ## Flows
 
-TODO: Document flows, for now see the [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md) example
+TODO: Document flows, for now see the [MPRIS to Home Assistant Media Player integration](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md) example
 
 ## Jinja templating
 
-TODO: Document Jinja templating, for now see the [MPRIS to Home Assistant Media Player integration](docs/examples/home_assistant_media_player.md) example
+TODO: Document Jinja templating, for now see the [MPRIS to Home Assistant Media Player integration](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md) example
