@@ -14,7 +14,7 @@ jobs:
     steps:
       - id: stable_versions
         run: |
-          echo "versions_matrix='{ \"version\": [\"0.1\", \"0.2\"] }'" >> $GITHUB_OUTPUT
+          echo "versions_matrix={\"version\":[\"0.1\", \"0.2\"]}" >> $GITHUB_OUTPUT
 
   docker:
     runs-on: ubuntu-latest
