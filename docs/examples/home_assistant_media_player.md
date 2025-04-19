@@ -1,6 +1,6 @@
 # Mediaplayer integration with Home Assistant
 
-Using bus2mqtt as a bridge between MPRIS players and Home Assistant, it becomes possible to control Linux based media players via Home Assistant.
+With dbus2mqtt as a bridge between MPRIS players and Home Assistant, it becomes possible to control Linux based media players via Home Assistant.
 
 The Media Player Remote Interfacing Specification (MPRIS) is a standard for controlling Linux media players. It provides a mechanism for compliant media players discovery, basic playback and media player state control as well as a tracklist interface which is used to add context to the current item.
 
@@ -59,8 +59,10 @@ For an overview of MPRIS commands have a look at <https://mpris2.readthedocs.io/
 
 ## Home Assistant configuration
 
-The Home Assistant configuration below is based on the
-Create the MQTT sensor for topic `dbus2mqtt/org.mpris.MediaPlayer2/state` and the Media Player as shown below
+The configuration shown below creates a few components in Home Assistant
+
+* Media Player
+* MQTT sensor listening on topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 
 ```yaml
 mqtt:
