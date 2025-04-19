@@ -1,44 +1,68 @@
 # Mediaplayer integration with Home Assistant
 
-Trying out this example
+With dbus2mqtt as a bridge between MPRIS players and Home Assistant, it becomes possible to control Linux based media players via Home Assistant.
 
-```bash
-uv run dbus2mqtt --config docs/home_assistant_media_player.yaml
-```
+The Media Player Remote Interfacing Specification (MPRIS) is a standard for controlling Linux media players. It provides a mechanism for compliant media players discovery, basic playback and media player state control as well as a tracklist interface which is used to add context to the current item.
 
-This example shows how this dbus2mqtt can act as a bridge between the MPRIS player and Home Assistant.
+Pre-requisites:
+
+* Home-Assistant with a working MQTT setup, the [media_player.template](https://github.com/Sennevds/media_player.template/tree/master) plugin installed and a working MQTT setup
+plugins installed
 
 Features:
 
 * dbus subscription using `org.mpris.MediaPlayer2.*` wildcard to support multiple concurrent MRPIS players
 * Every 5 seconds, the state if the `first` known MPRIS player is published to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 * Every MPRIS property update immediately publishes the state to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
-* Support for player commands (see table below)
+* Support for player commands (see below)
 
-## Player Commands
+Configuration activities
 
-The following table lists the supported player commands, their descriptions, and an example JSON payload for invoking them via MQTT.
+* MQTT Sensor and player configuration in Home Assistant (see below)
+* dbus2mqtt setup using the supplied `home_assistant_media_player.yaml`
 
-dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/command`. Method calls will be done for all matching players
+Execute the following command to run dbus2mqtt with the example configuration in this repository.
 
-| Interface                       | Method     | Description                              | Example JSON Payload                                                               |
-|---------------------------------|------------|------------------------------------------|------------------------------------------------------------------------------------|
-| `org.mpris.MediaPlayer2.Player` | `Pause`    | Pauses playback                          | `{ "method": "Pause" }`                                                            |
-| `org.mpris.MediaPlayer2.Player` | `Play`     | Starts playback                          | `{ "method": "Play" }`                                                             |
-| `org.mpris.MediaPlayer2.Player` | `PlayPause`| Toggles between play and pause           | `{ "method": "PlayPause" }`                                                        |
-| `org.mpris.MediaPlayer2.Player` | `OpenUri`  | Opens a media file or stream by URI      | `{ "method": "OpenUri", "args": ["<URI>"] }`                                       |
-| `org.mpris.MediaPlayer2.Player` | `Stop`     | Stops playback                           | `{ "method": "Stop" }`                                                             |
-| `org.mpris.MediaPlayer2`        | `Quit`     | Quits the media player                   | `{ "method": "Quit" }`                                                             |
+```bash
+dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
+```
 
-Replace `<URI>` in the `OpenUri` payload with the desired media URI.
 
-For an overview of MPRIS commands have a look at <https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html>
+## Tested configurations
+
+The following setup is known to work with Home Assistant.
+
+| Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek | Volume | Quit | Media Info | Media Image |
+|--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|
+| `Firefox`    | ✅ | ✅ | | | | ❌ | ✅ | Youtube only |
+| `VLC` | | | | | | | | | |
+
+## Player commands
+
+The following table lists player commands, their descriptions, and an example JSON payload for invoking them via MQTT.
+
+Dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/org.mpris.MediaPlayer2/command`. Method calls will be done for all matching players
+
+| Interface                       | Method<br />Property | Description                              | Example JSON Payload                           |
+|---------------------------------|------------|------------------------------------------|------------------------------------------------|
+| `org.mpris.MediaPlayer2.Player` | `Play`     | Starts playback                          | `{ "method": "Play" }`                         |
+| `org.mpris.MediaPlayer2.Player` | `Pause`    | Pauses playback                          | `{ "method": "Pause" }`                        |
+| `org.mpris.MediaPlayer2.Player` | `PlayPause`| Toggles between play and pause           | `{ "method": "PlayPause" }`                    |
+| `org.mpris.MediaPlayer2.Player` | `Next`     | Next                                     | `{ "method": "Next" }`                         |
+| `org.mpris.MediaPlayer2.Player` | `Previous` | Previous                                 | `{ "method": "Previous" }`                         |
+| `org.mpris.MediaPlayer2.Player` | `Stop`     | Stops playback                           | `{ "method": "Stop" }`                         |
+| `org.mpris.MediaPlayer2.Player` | `Seek`     | Seek forward or backward                | `{ "method": "Seek", "args": [60000000] }`                         |
+| `org.mpris.MediaPlayer2.Player` | `Volume`   | Set volume                               | `{ "property": "Volume", "value": 50 }`                         |
+| `org.mpris.MediaPlayer2`        | `Quit`     | Quits the media player                   | `{ "method": "Quit" }`                         |
+
+For an overview of MPRIS commands have a look at <https://mpris2.readthedocs.io/en/latest/interfaces.html#mpris2.MediaPlayer2>
 
 ## Home Assistant configuration
 
-Example Home Assistant configuration is based upon <https://github.com/Sennevds/media_player.template/tree/master>
+The configuration shown below creates a few components in Home Assistant
 
-Create the MQTT sensor for topic `dbus2mqtt/org.mpris.MediaPlayer2/state` and the Media Player as shown below
+* Media Player
+* MQTT sensor listening on topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 
 ```yaml
 mqtt:
@@ -62,7 +86,7 @@ media_player:
   - platform: media_player_template
     media_players:
       mpris_media_player:
-        # device_class: receiver
+        device_class: "generic"
         friendly_name: MPRIS Media Player
         value_template: "{{ states('sensor.mpris_media_player') }}"
 
