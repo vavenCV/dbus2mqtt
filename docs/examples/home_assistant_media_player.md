@@ -67,7 +67,7 @@ The configuration shown below creates a few components in Home Assistant
 ```yaml
 mqtt:
   sensor:
-    - name: "MPRIS Media Player"
+    - name: MPRIS Media Player state
       state_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       json_attributes_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       value_template: >-
@@ -86,7 +86,7 @@ media_player:
   - platform: media_player_template
     media_players:
       mpris_media_player:
-        device_class: "generic"
+        device_class: generic
         friendly_name: MPRIS Media Player
         value_template: "{{ states('sensor.mpris_media_player') }}"
 
@@ -104,7 +104,7 @@ media_player:
         media_image_url_template: >-
           {{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:url']
             | regex_replace(
-                find='https:\/\/www\\.youtube\\.com\/watch\\?v=(.*)',
+                find='https:\/\/www\\.youtube\\.com\/watch\\?v=([^&]+).*',
                 replace='https://img.youtube.com/vi/\\1/maxresdefault.jpg'
               )
           }}
