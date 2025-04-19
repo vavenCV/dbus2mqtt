@@ -16,6 +16,9 @@ jobs:
         run: |
           echo 'versions_matrix={"include":[{"version":"0.1","isLatest":true},{"version":"0.2","isLatest":false}]}'  >> $GITHUB_OUTPUT
 
+        # option 1: fetch from https://pypi.org/pypi/dbus2mqtt/json
+        # option 2: determine based on git tags (better because this requires tags and pypi releases to be in sync?)
+
   docker:
     runs-on: ubuntu-latest
     needs: setup
