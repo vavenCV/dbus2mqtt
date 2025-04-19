@@ -36,10 +36,8 @@ jobs:
           images: |
             jwnmulder/dbus2mqtt
             ghcr.io/jwnmulder/dbus2mqtt
-          # tags: |
-          #   type=raw,value=dev,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
           tags: |
-            type=edge,enable=true,prefix=,suffix=,branch=$repo.default_branch
+            type=raw,value=dev,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
