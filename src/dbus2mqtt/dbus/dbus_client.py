@@ -394,8 +394,8 @@ class DbusClient:
             return
 
         logger.debug(f"on_mqtt_msg: topic={msg.topic}, payload={json.dumps(msg.payload)}")
-        calls_done: list[str] = []
-        properties_set: list[str] = []
+        matched_method = False
+        matched_property = False
 
         payload_method = msg.payload.get("method")
         payload_method_args = msg.payload.get("args") or []
@@ -417,27 +417,27 @@ class DbusClient:
                             # filter configured method, configured topic, ...
                             if method.method == payload_method:
                                 interface = proxy_object.get_interface(name=interface_config.interface)
+                                matched_method = True
 
                                 try:
                                     logger.info(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
                                     await self.call_dbus_interface_method(interface, method.method, payload_method_args)
-                                    calls_done.append(method.method)
                                 except Exception as e:
-                                    logger.warning(f"on_mqtt_msg: method={method.method}, bus_name={bus_name} failed, exception={e}")
+                                    logger.warning(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name} failed, exception={e}")
 
                         for property in interface_config.properties:
                             # filter configured property, configured topic, ...
                             if property.property == payload_property:
                                 interface = proxy_object.get_interface(name=interface_config.interface)
+                                matched_property = True
 
                                 try:
                                     logger.info(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
                                     await self.set_dbus_interface_property(interface, property.property, payload_value)
-                                    properties_set.append(property.property)
                                 except Exception as e:
-                                    logger.warning(f"on_mqtt_msg: property={property.property}, bus_name={bus_name} failed, exception={e}")
+                                    logger.warning(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name} failed, exception={e}")
 
-        if len(calls_done) == 0 and len(properties_set) == 0:
+        if not matched_method and not matched_property:
             if payload_method:
                 logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
             if payload_property:
