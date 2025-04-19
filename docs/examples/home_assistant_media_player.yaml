@@ -7,7 +7,7 @@ dbus:
 
     - bus_name: org.mpris.MediaPlayer2.*
       path: /org/mpris/MediaPlayer2
-      # https://specifications.freedesktop.org/mpris-spec/latest/Player_Interface.html
+      # https://mpris2.readthedocs.io/en/latest/interfaces.html#mpris2.MediaPlayer2
 
       interfaces:
         - interface: org.freedesktop.DBus.Properties
@@ -48,8 +48,9 @@ dbus:
             - type: context_set
               context:
                 mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
-                # player_properties: |
-                #   {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
+                # TODO: This would be a nice addition to avoid repetition
+                #   player_properties: |
+                #     {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) | to_yaml }}
                 path: /org/mpris/MediaPlayer2
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
@@ -61,7 +62,7 @@ dbus:
         - name: "MPRIS player removed"
           triggers:
             - type: bus_name_removed
-            # filter: # CHECK FOR LAST ONE #
+            # filter: # TODO: Check if this is the last or inactive one #
           actions:
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
