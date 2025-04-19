@@ -25,7 +25,8 @@ classifiers = [
 
     "Intended Audience :: Developers",
     "Operating System :: POSIX :: Linux",
-
+    "License :: OSI Approved :: MIT License",
+  
     # Supported Python versions
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
