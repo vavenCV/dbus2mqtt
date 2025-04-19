@@ -14,7 +14,7 @@ jobs:
     steps:
       - id: stable_versions
         run: |
-          echo "versions_matrix={\"version\":[\"0.1\", \"0.2\"]}" >> $GITHUB_OUTPUT
+          echo 'versions_matrix={"include":[{"version":"0.1","isLatest":true},{"version":"0.2","isLatest":false}]}'  >> $GITHUB_OUTPUT
 
   docker:
     runs-on: ubuntu-latest
@@ -37,6 +37,7 @@ jobs:
             jwnmulder/dbus2mqtt
             ghcr.io/jwnmulder/dbus2mqtt
           tags: |
+            type=raw,value=dev,enable=${{ matrix.isLatest }}
             type=pep440,pattern={{major}},value=${{ matrix.version }},enable=${{ !startsWith(matrix.version, '0.') }}
             type=pep440,pattern={{major}}.{{minor}},value=${{ matrix.version }}
           # type=ref,event=branch
