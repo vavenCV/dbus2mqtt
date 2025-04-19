@@ -39,7 +39,7 @@ jobs:
           # tags: |
           #   type=raw,value=dev,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
           tags: |
-            type=edge,enable=true,prefix=,suffix=,branch=$repo.default_branch,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=edge,enable=true,prefix=,suffix=,branch=$repo.default_branch
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
