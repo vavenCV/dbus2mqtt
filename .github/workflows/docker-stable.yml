@@ -19,6 +19,11 @@ jobs:
       - name: Determine supported release versions
         id: supported_release_versions
         run: |
+          ls -l /home/runner/work/dbus2mqtt/dbus2mqtt/.github/scripts
+          ls -l /home/runner/work/dbus2mqtt/dbus2mqtt/.github
+          ls -l /home/runner/work/dbus2mqtt/dbus2mqtt
+          ls -l /home/runner/work/dbus2mqtt/
+
           SUPPORTED_CYCLES=("0.1" "0.2")
           VERSIONS_JSON=$(python3 ${{ github.workspace }}/.github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
           echo "release_versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
