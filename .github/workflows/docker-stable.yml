@@ -16,16 +16,14 @@ jobs:
     outputs:
       versions_matrix: ${{ steps.supported_release_versions.outputs.release_versions }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Determine supported release versions
         id: supported_release_versions
         run: |
-          echo "1"
-          pwd
-          echo "2"
-          find .
-
           SUPPORTED_CYCLES=("0.1" "0.2")
-          VERSIONS_JSON=$(python3 ${{ github.workspace }}/.github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
+          VERSIONS_JSON=$(python3 .github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
           echo "release_versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
   docker:
     runs-on: ubuntu-latest
