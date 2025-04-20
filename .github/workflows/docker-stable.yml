@@ -19,21 +19,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-tags: true
           fetch-depth: 0
 
       - name: Determine supported release versions
         id: supported_release_versions
         run: |
-          SUPPORTED_CYCLES=("0.1" "0.2")
+          SUPPORTED_CYCLES=("0.1" "0.2" "0.3" "0.4" "0.5" "0.6" "0.7" "0.8" "0.9" "1.0" "2.0")
+
           VERSIONS_JSON=$(python3 .github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
 
           # Wrap the output into matrix include
           VERSIONS_MATRIX=$(echo "$VERSIONS_JSON" | jq -c '{include: [.[] | {cycle: .cycle, version: .latestVersion, isLatestStable: .isLatestStable}]}')
 
-          echo "VERSIONS_JSON=$VERSIONS_JSON"
           echo "VERSIONS_MATRIX=$VERSIONS_MATRIX"
-
           echo "versions_matrix=$VERSIONS_MATRIX" >> $GITHUB_OUTPUT
   docker:
     runs-on: ubuntu-latest
@@ -57,11 +55,11 @@ jobs:
             ghcr.io/jwnmulder/dbus2mqtt
           tags: |
             type=raw,value=latest,enable=${{ matrix.isLatestStable }}
-            type=pep440,pattern={{major}},value=${{ matrix.latestVersion }},enable=${{ !startsWith(matrix.latestVersion, '0.') }}
-            type=pep440,pattern={{major}}.{{minor}},value=${{ matrix.latestVersion }}
+            type=pep440,pattern={{major}},value=${{ matrix.version }},enable=${{ !startsWith(matrix.version, '0.') }}
+            type=pep440,pattern={{major}}.{{minor}},value=${{ matrix.version }}
           # type=ref,event=branch
           # type=ref,event=pr
-          # type=semver,pattern={{version}},value=${{ matrix.latestVersion }}
+          # type=semver,pattern={{version}},value=${{ matrix.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
