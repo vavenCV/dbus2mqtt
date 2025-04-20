@@ -7,4 +7,6 @@ ARG DBUS2MQTT_VERSION=latest
 RUN pip install --no-cache-dir dbus2mqtt=="$DBUS2MQTT_VERSION"
 
 ENTRYPOINT ["python", "-m", "dbus2mqtt"]
+
+# show help message by default
 CMD ["--help"]
