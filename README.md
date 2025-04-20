@@ -19,12 +19,6 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 
 Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found here: [home_assistant_media_player.md](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md)
 
-
-TODO list
-
-* Improve error handling when deleting message with 'retain' set. WARNING:dbus2mqtt.mqtt_client:on_message: Unexpected payload, expecting json, topic=dbus2mqtt/org.mpris.MediaPlayer2/command, payload=, error=Expecting value: line 1 column 1 (char 0)
-* Property set only works the first time, need to restart after which the first set will work again
-
 ## Getting started with dbus2mqtt
 
 Create a `config.yaml` file with the contents shown below. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic. Have a look at [docs/examples](docs/examples.md) for more examples
