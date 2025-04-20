@@ -20,7 +20,7 @@ jobs:
         id: supported_release_versions
         run: |
           SUPPORTED_CYCLES=("0.1" "0.2")
-          VERSIONS_JSON=$(python3 .github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
+          VERSIONS_JSON=$(python3 ${{ github.workspace }}/.github/scripts/release-versions.py "${SUPPORTED_CYCLES[@]}")
           echo "release_versions=$VERSIONS_JSON" >> $GITHUB_OUTPUT
   docker:
     runs-on: ubuntu-latest
