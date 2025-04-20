@@ -22,8 +22,6 @@ jobs:
           echo "1"
           pwd
           echo "2"
-          ${{ github.workspace }}
-          echo "3"
           find .
 
           SUPPORTED_CYCLES=("0.1" "0.2")
