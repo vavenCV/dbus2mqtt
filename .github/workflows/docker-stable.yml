@@ -28,6 +28,9 @@ jobs:
           # Wrap the output into matrix include
           VERSIONS_MATRIX=$(echo "$VERSIONS_JSON" | jq -c '{include: [.[] | {cycle: .cycle, version: .latestVersion, isLatestStable: .isLatestStable}]}')
 
+          echo "VERSIONS_JSON=$VERSIONS_JSON"
+          echo "VERSIONS_MATRIX=$VERSIONS_MATRIX"
+
           echo "versions_matrix=$VERSIONS_MATRIX" >> $GITHUB_OUTPUT
   docker:
     runs-on: ubuntu-latest
