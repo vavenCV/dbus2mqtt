@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
+          fetch-depth: 0
 
       - name: Determine supported release versions
         id: supported_release_versions
