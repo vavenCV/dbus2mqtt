@@ -389,7 +389,7 @@ class DbusClient:
         for subscription_configs in self.config.subscriptions:
             for interface_config in subscription_configs.interfaces:
                 # TODO, performance improvement
-                mqtt_topic = interface_config.render_mqtt_call_method_topic(self.templating, {})
+                mqtt_topic = interface_config.render_mqtt_command_topic(self.templating, {})
                 found_matching_topic |= mqtt_topic == msg.topic
 
         if not found_matching_topic:
