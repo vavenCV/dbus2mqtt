@@ -22,11 +22,6 @@ categories:
 exclude-contributors:
   - jwnmulder
 autolabeler:
-  - label: documentation
-    files:
-      - '*.md'
-    branch:
-      - '/docs\/.+/'
   - label: enhancement
     branch:
       - '/feature\/.+/'
