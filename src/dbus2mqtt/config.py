@@ -30,14 +30,14 @@ class PropertyConfig:
 @dataclass
 class InterfaceConfig:
     interface: str
-    mqtt_call_method_topic: str | None = None
+    mqtt_command_topic: str | None = None
     signals: list[SignalConfig] = field(default_factory=list)
     methods: list[MethodConfig] = field(default_factory=list)
     properties: list[PropertyConfig] = field(default_factory=list)
 
-    def render_mqtt_call_method_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
-        if self.mqtt_call_method_topic:
-            return template_engine.render_template(self.mqtt_call_method_topic, str, context)
+    def render_mqtt_command_topic(self, template_engine: TemplateEngine, context: dict[str, Any]) -> Any:
+        if self.mqtt_command_topic:
+            return template_engine.render_template(self.mqtt_command_topic, str, context)
         return None
 
 @dataclass

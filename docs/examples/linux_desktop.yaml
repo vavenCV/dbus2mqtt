@@ -17,7 +17,7 @@ dbus:
             - method: GetAll
 
         - interface: org.gnome.SessionManager
-          mqtt_call_method_topic: dbus2mqtt/SessionManager/command
+          mqtt_command_topic: dbus2mqtt/SessionManager/command
           methods:
             - method: Logout
             - method: Reboot  # reboot dialog

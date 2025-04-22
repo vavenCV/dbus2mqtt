@@ -133,7 +133,7 @@ dbus:
       path: /org/mpris/MediaPlayer2
       interfaces:
         - interface: org.mpris.MediaPlayer2.Player
-          mqtt_call_method_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+          mqtt_command_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
           methods:
             - method: Pause
             - method: Play
