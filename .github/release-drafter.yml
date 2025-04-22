@@ -39,6 +39,7 @@ version-resolver:
       - minor
       - feature
       - enhancement
+      - breaking-change  # minor until we are on 1.x
   patch:
     labels:
       - patch
