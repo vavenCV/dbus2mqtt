@@ -3,19 +3,22 @@ tag-template: 'v$RESOLVED_VERSION'
 exclude-labels:
   - dependencies
 categories:
-  - title: '🚀 Features'
+  - title: 🚀 Features
     labels:
       - feature
       - enhancement
-  - title: '🐛 Bug Fixes'
+  - title: 🐛 Bug Fixes
     labels:
       - fix
       - bugfix
       - bug
-  - title: '🧰 Maintenance'
+  - title: 🧰 Maintenance
     labels:
       - chore
       - documentation
+  - title: 💥 Breaking changes
+    labels:
+      - breaking-change
 exclude-contributors:
   - jwnmulder
 autolabeler:
