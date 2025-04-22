@@ -3,6 +3,9 @@ tag-template: 'v$RESOLVED_VERSION'
 exclude-labels:
   - dependencies
 categories:
+  - title: 💥 Breaking changes
+    labels:
+      - breaking-change
   - title: 🚀 Features
     labels:
       - feature
@@ -16,9 +19,6 @@ categories:
     labels:
       - chore
       - documentation
-  - title: 💥 Breaking changes
-    labels:
-      - breaking-change
 exclude-contributors:
   - jwnmulder
 autolabeler:
