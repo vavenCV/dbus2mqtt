@@ -5,27 +5,45 @@ exclude-labels:
 categories:
   - title: '🚀 Features'
     labels:
-      - 'feature'
-      - 'enhancement'
+      - feature
+      - enhancement
   - title: '🐛 Bug Fixes'
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
+      - fix
+      - bugfix
+      - bug
   - title: '🧰 Maintenance'
-    label: 'chore'
+    labels:
+      - chore
+      - documentation
 exclude-contributors:
   - jwnmulder
+autolabeler:
+  - label: documentation
+    files:
+      - '*.md'
+    branch:
+      - '/docs\/.+/'
+  - label: enhancement
+    branch:
+      - '/feature\/.+/'
+  - label: fix
+    branch:
+      - '/fix\/.+/'
+    title:
+      - '/fix/i'
 version-resolver:
   major:
     labels:
-      - 'major'
+      - major
   minor:
     labels:
-      - 'minor'
+      - minor
+      - feature
+      - enhancement
   patch:
     labels:
-      - 'patch'
+      - patch
   default: patch
 change-template: '* $TITLE (#$NUMBER)'
 template: |
