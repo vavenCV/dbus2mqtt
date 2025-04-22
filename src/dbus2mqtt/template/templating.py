@@ -48,7 +48,7 @@ class TemplateEngine:
             return res_type(res) # type: ignore
 
         except Exception as e:
-            raise ValueError(f"Error converting rendered template result from '{res}' to '{res_type.__name__}'") from e
+            raise ValueError(f"Error converting rendered template result from '{type(res).__name__}' to '{res_type.__name__}'") from e
 
     def _render_template_nested(self, templatable: str | dict[str, Any], context: dict[str, Any] = {}) -> Any:
 

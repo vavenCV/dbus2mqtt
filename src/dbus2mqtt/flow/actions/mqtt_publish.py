@@ -31,13 +31,13 @@ class MqttPublishAction(FlowAction):
 
             payload = await self.templating.async_render_template(self.config.payload_template, res_type, render_context)
 
-        except TemplateError:
-            logger.warning(f"Error rendering jinja template, flow: '{context.name or ''}', payload_template={self.config.payload_template}, render_context={render_context}", exc_info=True)
+        except TemplateError as e:
+            logger.warning(f"Error rendering jinja template, flow: '{context.name or ''}', msg={e}, payload_template={self.config.payload_template}, render_context={render_context}", exc_info=True)
             return
-        except Exception:
+        except Exception as e:
             # Dont log full exception info to avoid log spamming on dbus errors
             # due to clients disconnecting
-            logger.warning(f"Error rendering jinja template, flow: '{context.name or ''}', payload_template={self.config.payload_template}, render_context={render_context}")
+            logger.warning(f"Error rendering jinja template, flow: '{context.name or ''}', msg={e} payload_template={self.config.payload_template}, render_context={render_context}")
             return
 
         logger.debug(f"public_mqtt: flow={context.name}, payload={payload}")
