@@ -12,6 +12,11 @@
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
       "addLabels": ["automerge"]
+    },
+    {
+      "description": "Disable Renovate for .python-version",
+      "matchFiles": [".python-version"],
+      "enabled": false
     }
   ]
 }
