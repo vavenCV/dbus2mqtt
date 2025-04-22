@@ -23,13 +23,14 @@ dbus:
             - method: Reboot  # reboot dialog
 
       flows:
-        - name: "publish state on schedule"
+        - name: "publish state at startup and schedule"
           triggers:
+            - type: bus_name_added
             - type: schedule
               interval: {seconds: 5}
           actions:
             - type: mqtt_publish
               topic: dbus2mqtt/SessionManager
               payload_type: json
-              payload_template: |
-                clients: {{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.gnome.SessionManager', 'GetClients') }}
+              payload_template:
+                clients: "{{ dbus_call('org.gnome.SessionManager', '/org/gnome/SessionManager', 'org.gnome.SessionManager', 'GetClients') }}"
