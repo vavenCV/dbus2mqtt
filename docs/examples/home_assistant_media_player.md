@@ -32,10 +32,10 @@ dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
 
 The following setup is known to work with Home Assistant.
 
-| Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image |
-|--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|
-| `Firefox`    | ✅ | ✅ | ✅ | ✅ | | ❌ | ✅ | Youtube only |
-| `VLC` | | | | | | | | | |
+| Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes
+|--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
+| `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✔️ | Youtube image only
+| `VLC`        | ✅ | ✅ | ✅ | ✅ | Almost | ✅ | ✅ | | Seeked signal not working
 
 ## Player commands
 
@@ -52,7 +52,7 @@ Dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/
 | `org.mpris.MediaPlayer2.Player` | `Previous`    | Previous                                 | `{ "method": "Previous" }`                     |
 | `org.mpris.MediaPlayer2.Player` | `Stop`        | Stops playback                           | `{ "method": "Stop" }`                         |
 | `org.mpris.MediaPlayer2.Player` | `Seek`        | Seek forward or backward in micro seconds  | `{ "method": "Seek", "args": [60000000] }`   |
-| `org.mpris.MediaPlayer2.Player` | `Volume`      | Set volume                               | `{ "property": "Volume", "value": 50 }`        |
+| `org.mpris.MediaPlayer2.Player` | `Volume`      | Set volume (double between 0 and 1)      | `{ "property": "Volume", "value": 1.0 }`        |
 | `org.mpris.MediaPlayer2.Player` | `SetPosition` | Set / seek to position in micro seconds. First arguments needs to be trackid which can be determined via Metadata.mpris:trackid | `{ "method": "SetPosition", "args": ["/org/mpris/MediaPlayer2/firefox", 170692139] }`                         |
 | `org.mpris.MediaPlayer2`        | `Quit`        | Quits the media player                   | `{ "method": "Quit" }`                         |
 
