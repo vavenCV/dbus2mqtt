@@ -1,0 +1,40 @@
+# mqtt:
+#   host:
+#   port:
+
+dbus:
+  subscriptions:
+
+    # https://manpages.ubuntu.com/manpages/lunar/man5/org.freedesktop.systemd1.5.html
+    - bus_name: org.freedesktop.systemd1
+      path: /org/freedesktop/systemd1
+      interfaces:
+        - interface: org.freedesktop.DBus.Properties
+          signals:
+            - signal: PropertiesChanged
+          methods:
+            - method: GetAll
+
+    # https://lira.no-ip.org:8443/doc/gnome-session/dbus/gnome-session.html
+    - bus_name: org.gnome.SessionManager
+      path: /org/gnome/SessionManager
+      interfaces:
+        - interface: org.freedesktop.DBus.Properties
+          signals:
+            - signal: PropertiesChanged
+          methods:
+            - method: GetAll
+
+flows:
+  - name: "publish internal state"
+    triggers:
+      - type: bus_name_added
+      - type: schedule
+        interval: {seconds: 5}
+    actions:
+      - type: mqtt_publish
+        topic: dbus2mqtt/state
+        payload_type: json
+        payload_template:
+          now: "{{ now().isoformat() }}"
+          dbus_list: "{{ dbus_list('*') }}"
