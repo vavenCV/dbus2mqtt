@@ -323,7 +323,7 @@ class DbusClient:
 
         return res
 
-    async def get_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str):
+    async def get_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str) -> Any:
 
         call_method_name = "get_" + camel_to_snake(property)
         res = await interface.__getattribute__(call_method_name)()
@@ -335,17 +335,12 @@ class DbusClient:
 
         return res
 
-    async def set_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str, value):
+    async def set_dbus_interface_property(self, interface: dbus_aio.proxy_object.ProxyInterface, property: str, value: Any) -> None:
 
         call_method_name = "set_" + camel_to_snake(property)
-        res = await interface.__getattribute__(call_method_name)(value)
+        await interface.__getattribute__(call_method_name)(value)
 
-        if res:
-            res = unwrap_dbus_object(res)
-
-        logger.info(f"set_dbus_interface_property: bus_name={interface.bus_name}, interface={interface.introspection.name}, property={property}, res={res}")
-
-        return res
+        logger.info(f"set_dbus_interface_property: bus_name={interface.bus_name}, interface={interface.introspection.name}, property={property}, value={value}")
 
     async def mqtt_receive_queue_processor_task(self):
         """Continuously processes messages from the async queue."""
