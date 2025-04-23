@@ -123,4 +123,7 @@ def main():
 
     logger.debug(f"config: {config}")
 
-    asyncio.run(run(config))
+    try:
+        asyncio.run(run(config))
+    except KeyboardInterrupt:
+        return 0
