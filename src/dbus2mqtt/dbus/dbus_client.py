@@ -17,6 +17,7 @@ from dbus2mqtt.dbus.dbus_util import (
     unwrap_dbus_object,
     unwrap_dbus_objects,
 )
+from dbus2mqtt.dbus.introspection_patches.mpris_vlc import mpris_introspection_vlc
 from dbus2mqtt.event_broker import DbusSignalWithState, MqttMessage
 from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 
@@ -162,12 +163,24 @@ class DbusClient:
 
         return new_subscriptions
 
+    async def _introspect(self, bus_name: str, path: str) -> dbus_introspection.Node:
+
+        if path == "/org/mpris/MediaPlayer2" and bus_name.startswith("org.mpris.MediaPlayer2.vlc"):
+            # vlc 3.x branch contains an incomplete dbus introspection
+            # https://github.com/videolan/vlc/commit/48e593f164d2bf09b0ca096d88c86d78ec1a2ca0
+            # Until vlc 4.x is out we use the official specification instead
+            introspection = mpris_introspection_vlc
+        else:
+            introspection = await self.bus.introspect(bus_name, path)
+
+        return introspection
+
     async def _visit_bus_name_path(self, bus_name: str, path: str) -> list[SubscribedInterface]:
 
         new_subscriptions: list[SubscribedInterface] = []
 
         try:
-            introspection = await self.bus.introspect(bus_name, path)
+            introspection = await self._introspect(bus_name, path)
         except TypeError as e:
             logger.warning(f"bus.introspect failed, bus_name={bus_name}, path={path}: {e}")
             return new_subscriptions
