@@ -27,7 +27,6 @@ Execute the following command to run dbus2mqtt with the example configuration in
 dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
 ```
 
-
 ## Tested configurations
 
 The following setup is known to work with Home Assistant.
@@ -36,6 +35,8 @@ The following setup is known to work with Home Assistant.
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
 | `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✔️ | Youtube image only |
 | `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | | |
+
+More players that support MPRIS can be found here: <https://wiki.archlinux.org/title/MPRIS>
 
 ## Player commands
 
