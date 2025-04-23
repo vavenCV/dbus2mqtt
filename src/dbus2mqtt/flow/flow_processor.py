@@ -7,7 +7,7 @@ from typing import Any
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from dbus2mqtt import AppContext
-from dbus2mqtt.config import FlowConfig, FlowTriggerConfig
+from dbus2mqtt.config import FlowConfig, FlowTriggerConfig, FlowTriggerDbusSignalConfig
 from dbus2mqtt.event_broker import FlowTriggerMessage
 from dbus2mqtt.flow import FlowAction, FlowExecutionContext
 from dbus2mqtt.flow.actions.context_set import ContextSetAction
@@ -164,8 +164,15 @@ class FlowProcessor:
             finally:
                 self.event_broker.flow_trigger_queue.async_q.task_done()
 
+    def _trigger_config_to_str(self, config: FlowTriggerConfig) -> str:
+        if isinstance(config, FlowTriggerDbusSignalConfig):
+            return f"{config.type}({config.signal})"
+        return config.type
+
     async def _process_flow_trigger(self, flow_trigger_message: FlowTriggerMessage):
-        log_message = f"on_trigger: {flow_trigger_message.flow_trigger_config.type}, time={flow_trigger_message.timestamp.isoformat()}"
+
+        trigger_str = self._trigger_config_to_str(flow_trigger_message.flow_trigger_config)
+        log_message = f"on_trigger: {trigger_str}, time={flow_trigger_message.timestamp.isoformat()}"
         if flow_trigger_message.flow_trigger_config.type != "schedule":
             logger.info(log_message)
         else:
