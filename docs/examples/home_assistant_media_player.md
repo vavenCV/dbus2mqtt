@@ -34,8 +34,8 @@ The following setup is known to work with Home Assistant.
 
 | Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
-| `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✔️ | Youtube image only
-| `VLC`        | ✅ | ✅ | ✅ | ✅ | Almost | ✅ | ✅ | | Seeked signal not working
+| `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✔️ | Youtube image only |
+| `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | | |
 
 ## Player commands
 
@@ -94,16 +94,16 @@ media_player:
         current_volume_template: "{{ state_attr('sensor.mpris_media_player', 'Volume') }}"
         current_is_muted_template: "{{ state_attr('sensor.mpris_media_player', 'Volume') == 0 }}"
         current_position_template: "{{ state_attr('sensor.mpris_media_player', 'Position') }}"
-        title_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:title'] }}"
+        title_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:title', '') }}"
 
         media_content_type_template: music  # needed to show 'artist'
-        media_duration_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:length'] }}"
-        album_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:album'] }}"
-        artist_template: "{{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:artist'] | first }}"
+        media_duration_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('mpris:length', 0) }}"
+        album_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:album', '') }}"
+        artist_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:artist', ['']) | first }}"
 
         # mpris:artUrl is referencing a local file when firefox is used, for now this will provide Youtube img support
         media_image_url_template: >-
-          {{ state_attr('sensor.mpris_media_player', 'Metadata')['xesam:url']
+          {{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:url', '')
             | regex_replace(
                 find='https:\/\/www\\.youtube\\.com\/watch\\?v=([^&]+).*',
                 replace='https://img.youtube.com/vi/\\1/maxresdefault.jpg'
@@ -144,7 +144,7 @@ media_player:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: >-
+            payload: >
               { "method": "SetPosition", "args": ["{{ state_attr('sensor.mpris_media_player', 'Metadata')['mpris:trackid'] }}", {{ position | int }}] }
         set_volume:
           service: mqtt.publish
@@ -155,10 +155,12 @@ media_player:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"property": "Volume", "value": 0.0 }'
+            payload: >
+              {"property": "Volume", "value": {{ [1, (state_attr('sensor.mpris_media_player', 'Volume') + 0.1)] | min }} }
         volume_down:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"property": "Volume", "value": 0.0 }'
+            payload: >
+              {"property": "Volume", "value": {{ [0, (state_attr('sensor.mpris_media_player', 'Volume') - 0.1)] | max }} }
 ```
