@@ -6,8 +6,8 @@ The Media Player Remote Interfacing Specification (MPRIS) is a standard for cont
 
 Pre-requisites:
 
-* Home-Assistant with a working MQTT setup, the [media_player.template](https://github.com/Sennevds/media_player.template/tree/master) plugin installed and a working MQTT setup
-plugins installed
+* Home-Assistant with a working MQTT setup
+* The [media_player.template](https://github.com/Sennevds/media_player.template/tree/master) plugin
 
 Features:
 
