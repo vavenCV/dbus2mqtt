@@ -8,6 +8,7 @@ import colorlog
 import dbus_next.aio as dbus_aio
 import dotenv
 import jsonargparse
+import yaml
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import Config
@@ -84,6 +85,14 @@ async def run(config: Config):
     except asyncio.CancelledError:
         pass
 
+def custom_yaml_load(stream):
+    # jsonargparse tries to parse yaml 1.1 boolean like values
+    # Without this, str:"{'PlaybackStatus': 'Off'}" would become dict:{'PlaybackStatus': False}
+    if isinstance(stream, str):
+        if stream in ['on', 'On', 'off', 'Off', 'TRUE', 'FALSE', 'True', 'False']:
+            return stream
+    return yaml.load(stream, Loader=yaml.SafeLoader)
+
 def main():
 
     # load environment from .env if it exists
@@ -93,7 +102,8 @@ def main():
         dotenv.load_dotenv(dotenv_path=dotenv_file)
 
     # unless specified otherwise, load config from config.yaml
-    parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"], default_env=True, env_prefix=False)
+    jsonargparse.set_loader("yaml_custom", custom_yaml_load)
+    parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"], default_env=True, env_prefix=False, parser_mode="yaml_custom")
 
     parser.add_argument("--verbose", "-v", nargs="?", const=True, help="Enable verbose logging")
     parser.add_argument("--config", action="config")
