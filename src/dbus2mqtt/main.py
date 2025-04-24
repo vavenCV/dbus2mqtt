@@ -8,7 +8,6 @@ import colorlog
 import dbus_next.aio as dbus_aio
 import dotenv
 import jsonargparse
-import yaml
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import Config
@@ -86,12 +85,23 @@ async def run(config: Config):
         pass
 
 def custom_yaml_load(stream):
-    # jsonargparse tries to parse yaml 1.1 boolean like values
-    # Without this, str:"{'PlaybackStatus': 'Off'}" would become dict:{'PlaybackStatus': False}
     if isinstance(stream, str):
-        if stream in ['on', 'On', 'off', 'Off', 'TRUE', 'FALSE', 'True', 'False']:
+        v = stream.strip()
+
+        # jsonargparse tries to parse yaml 1.1 boolean like values
+        # Without this, str:"{'PlaybackStatus': 'Off'}" would become dict:{'PlaybackStatus': False}
+        if v in ['on', 'On', 'off', 'Off', 'TRUE', 'FALSE', 'True', 'False']:
             return stream
-    return yaml.load(stream, Loader=yaml.SafeLoader)
+
+        # Anoyingly, values starting with {{ and ending with }} are working with the default yaml_loader
+        # from jsonargparse. Somehow its not when we use the custom yaml loader.
+        # This fixes it
+        if v.startswith("{{") and v.endswith("}}"):
+            return stream
+
+    # Delegate to default yaml loader from jsonargparse
+    yaml_loader = jsonargparse.get_loader("yaml")
+    return yaml_loader(stream)
 
 def main():
 
