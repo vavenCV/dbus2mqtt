@@ -4,10 +4,9 @@ import os
 from typing import cast
 
 import dotenv
-import jsonargparse
 
 from dbus2mqtt.config import Config
-from dbus2mqtt.main import custom_yaml_load
+from dbus2mqtt.config.jsonarparse import new_argument_parser
 
 FILE_DIR = os.path.dirname(__file__)
 
@@ -15,11 +14,8 @@ def test_off_string_value():
 
     dotenv.load_dotenv(".env.example")
 
-    jsonargparse.set_loader("yaml_custom", custom_yaml_load)
-    parser = jsonargparse.ArgumentParser(default_env=True, env_prefix=False, parser_mode="yaml_custom")
+    parser = new_argument_parser()
     parser.add_class_arguments(Config)
-
-    # parser.(format="yaml")
 
     cfg = parser.parse_path(f"{FILE_DIR}/fixtures/payload_template_off.yaml")
     config: Config = cast(Config, parser.instantiate_classes(cfg))

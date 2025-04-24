@@ -7,10 +7,10 @@ from typing import cast
 import colorlog
 import dbus_next.aio as dbus_aio
 import dotenv
-import jsonargparse
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import Config
+from dbus2mqtt.config.jsonarparse import new_argument_parser
 from dbus2mqtt.dbus.dbus_client import DbusClient
 from dbus2mqtt.event_broker import EventBroker
 from dbus2mqtt.flow.flow_processor import FlowProcessor, FlowScheduler
@@ -84,24 +84,6 @@ async def run(config: Config):
     except asyncio.CancelledError:
         pass
 
-def custom_yaml_load(stream):
-    if isinstance(stream, str):
-        v = stream.strip()
-
-        # jsonargparse tries to parse yaml 1.1 boolean like values
-        # Without this, str:"{'PlaybackStatus': 'Off'}" would become dict:{'PlaybackStatus': False}
-        if v in ['on', 'On', 'off', 'Off', 'TRUE', 'FALSE', 'True', 'False']:
-            return stream
-
-        # Anoyingly, values starting with {{ and ending with }} are working with the default yaml_loader
-        # from jsonargparse. Somehow its not when we use the custom yaml loader.
-        # This fixes it
-        if v.startswith("{{") and v.endswith("}}"):
-            return stream
-
-    # Delegate to default yaml loader from jsonargparse
-    yaml_loader = jsonargparse.get_loader("yaml")
-    return yaml_loader(stream)
 
 def main():
 
@@ -111,9 +93,7 @@ def main():
         logger.info(f"Loaded environment variables from {dotenv_file}")
         dotenv.load_dotenv(dotenv_path=dotenv_file)
 
-    # unless specified otherwise, load config from config.yaml
-    jsonargparse.set_loader("yaml_custom", custom_yaml_load)
-    parser = jsonargparse.ArgumentParser(default_config_files=["config.yaml"], default_env=True, env_prefix=False, parser_mode="yaml_custom")
+    parser = new_argument_parser()
 
     parser.add_argument("--verbose", "-v", nargs="?", const=True, help="Enable verbose logging")
     parser.add_argument("--config", action="config")
