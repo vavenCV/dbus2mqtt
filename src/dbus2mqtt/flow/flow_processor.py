@@ -184,23 +184,4 @@ class FlowProcessor:
         # flow_name = flow_trigger_message.flow_config.name
 
         flow = self._flows[flow_id]
-        await flow.execute_actions(trigger_context=flow_trigger_message.context)
-
-# # Create a flow from the YAML configuration
-# for flow_config in config['flows']:
-#     flow_name = flow_config['name']
-#     triggers = flow_config.get('triggers', [])
-#     actions = flow_config.get('actions', [])
-
-#     with Flow(flow_name) as flow:
-#         data = "sensor_data"
-#         for action in actions:
-#             if action['type'] == 'python_script':
-#                 process_data(data)
-#             elif action['type'] == 'mqtt_publish':
-#                 mqtt_publish(action['topic'], action['message_template'], data)
-
-#         # Add scheduling trigger if defined
-#         for trigger in triggers:
-#             if trigger['type'] == 'schedule' and 'cron' in trigger:
-#                 flow.schedule = CronSchedule(cron=trigger['cron'])
+        await flow.execute_actions(trigger_context=flow_trigger_message.trigger_context)
