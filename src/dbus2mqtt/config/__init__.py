@@ -60,17 +60,17 @@ class FlowTriggerDbusSignalConfig:
     type: Literal["dbus_signal"] = "dbus_signal"
     bus_name: str | None = None
     path: str | None = None
-    filter: str | None = None
+    # filter: str | None = None
 
 @dataclass
 class FlowTriggerBusNameAddedConfig:
     type: Literal["bus_name_added"] = "bus_name_added"
-    filter: str | None = None
+    # filter: str | None = None
 
 @dataclass
 class FlowTriggerBusNameRemovedConfig:
     type: Literal["bus_name_removed"] = "bus_name_removed"
-    filter: str | None = None
+    # filter: str | None = None
 
 FlowTriggerConfig = Annotated[
     FlowTriggerMqttConfig | FlowTriggerScheduleConfig | FlowTriggerDbusSignalConfig | FlowTriggerBusNameAddedConfig | FlowTriggerBusNameRemovedConfig,
@@ -80,8 +80,10 @@ FlowTriggerConfig = Annotated[
 @dataclass
 class FlowActionContextSetConfig:
     type: Literal["context_set"] = "context_set"
-    context: dict[str, Any] | None = None
-    global_context: dict[str, Any] | None = None
+    context: dict[str, object] | None = None
+    """Per flow execution context"""
+    global_context: dict[str, object] | None = None
+    """Global context, shared between multiple flow executions, over all subscriptions"""
 
 @dataclass
 class FlowActionMqttPublishConfig:
