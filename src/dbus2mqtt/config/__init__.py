@@ -50,8 +50,8 @@ class FlowTriggerMqttConfig:
 class FlowTriggerScheduleConfig:
     type: Literal["schedule"] = "schedule"
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
-    cron: dict[str, Any] | None = None
-    interval: dict[str, Any] | None = None
+    cron: dict[str, object] | None = None
+    interval: dict[str, object] | None = None
 
 @dataclass
 class FlowTriggerDbusSignalConfig:
