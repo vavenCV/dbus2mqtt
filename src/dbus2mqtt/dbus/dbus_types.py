@@ -9,7 +9,7 @@ from dbus2mqtt.config import InterfaceConfig, SubscriptionConfig
 
 class BusNameSubscriptions:
 
-    def __init__(self,  bus_name: str):
+    def __init__(self, bus_name: str):
         self.bus_name = bus_name
         self.path_objects: dict[str, dbus_aio.proxy_object.ProxyObject] = {}
 

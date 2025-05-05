@@ -236,21 +236,27 @@ class DbusClient:
                 self.flow_scheduler.start_flow_set(subscription_config.flows)
 
                 # Trigger flows that have a bus_name_added trigger configured
-                await self._trigger_bus_name_added(subscription_config, subscribed_interface.bus_name)
+                await self._trigger_bus_name_added(subscription_config, subscribed_interface.bus_name, subscribed_interface.path)
 
                 processed_new_subscriptions.add(subscription_config.id)
 
         return new_subscriped_interfaces
 
-    async def _trigger_bus_name_added(self, subscription_config: SubscriptionConfig, bus_name: str):
+    async def _trigger_bus_name_added(self, subscription_config: SubscriptionConfig, bus_name: str, path: str):
 
         for flow in subscription_config.flows:
             for trigger in flow.triggers:
                 if trigger.type == "bus_name_added":
-                    context = {
+                    trigger_context = {
                         "bus_name": bus_name,
+                        "path": path
                     }
-                    trigger_message = FlowTriggerMessage(flow, trigger, datetime.now(), context)
+                    trigger_message = FlowTriggerMessage(
+                        flow,
+                        trigger,
+                        datetime.now(),
+                        trigger_context=trigger_context
+                    )
                     await self.event_broker.flow_trigger_queue.async_q.put(trigger_message)
 
     async def _handle_bus_name_removed(self, bus_name: str):
@@ -264,7 +270,7 @@ class DbusClient:
                 for subscription_config in subscription_configs:
 
                     # Trigger flows that have a bus_name_added trigger configured
-                    await self._trigger_bus_name_removed(subscription_config, bus_name)
+                    await self._trigger_bus_name_removed(subscription_config, bus_name, path)
 
                     # Stop schedule triggers
                     self.flow_scheduler.stop_flow_set(subscription_config.flows)
@@ -288,16 +294,22 @@ class DbusClient:
 
             del self.subscriptions[bus_name]
 
-    async def _trigger_bus_name_removed(self, subscription_config: SubscriptionConfig, bus_name: str):
+    async def _trigger_bus_name_removed(self, subscription_config: SubscriptionConfig, bus_name: str, path: str):
 
         # Trigger flows that have a bus_name_removed trigger configured
         for flow in subscription_config.flows:
             for trigger in flow.triggers:
                 if trigger.type == "bus_name_removed":
-                    context = {
+                    trigger_context = {
                         "bus_name": bus_name,
+                        "path": path
                     }
-                    trigger_message = FlowTriggerMessage(flow, trigger, datetime.now(), context)
+                    trigger_message = FlowTriggerMessage(
+                        flow,
+                        trigger,
+                        datetime.now(),
+                        trigger_context=trigger_context
+                    )
                     await self.event_broker.flow_trigger_queue.async_q.put(trigger_message)
 
     async def _dbus_name_owner_changed_callback(self, name, old_owner, new_owner):
@@ -375,13 +387,18 @@ class DbusClient:
                             matches_filter = signal.signal_config.matches_filter(self.app_context.templating, *signal.args)
 
                         if matches_filter:
-                            context = {
+                            trigger_context = {
                                 "bus_name": signal.bus_name,
                                 "path": signal.path,
                                 "interface": signal.interface_name,
                                 "args": signal.args
                             }
-                            trigger_message = FlowTriggerMessage(flow, trigger, datetime.now(), context)
+                            trigger_message = FlowTriggerMessage(
+                                flow,
+                                trigger,
+                                datetime.now(),
+                                trigger_context=trigger_context
+                            )
 
                             await self.event_broker.flow_trigger_queue.async_q.put(trigger_message)
                     except Exception as e:
