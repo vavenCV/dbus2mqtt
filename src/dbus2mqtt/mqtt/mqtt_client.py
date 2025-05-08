@@ -4,6 +4,8 @@ import json
 import logging
 
 from typing import Any
+from urllib.parse import ParseResult
+from urllib.request import urlopen
 
 import paho.mqtt.client as mqtt
 import yaml
@@ -55,15 +57,17 @@ class MqttClient:
             msg = await self.event_broker.mqtt_publish_queue.async_q.get()  # Wait for a message
 
             try:
-                payload = msg.payload
+                payload: str | bytes | None = msg.payload
                 type = msg.payload_serialization_type
-                if isinstance(msg.payload, dict):
-                    if type == "json":
-                        payload = json.dumps(msg.payload)
-                    elif type == "yaml":
-                        payload = yaml.dump(msg.payload)
-                elif type == "text":
-                    payload = str(payload)
+                if type == "text":
+                    payload = str(msg.payload)
+                if isinstance(msg.payload, dict) and type == "json":
+                    payload = json.dumps(msg.payload)
+                elif isinstance(msg.payload, dict) and type == "yaml":
+                    payload = yaml.dump(msg.payload)
+                elif isinstance(msg.payload, ParseResult) and type == "binary":
+                    with urlopen(msg.payload.geturl()) as response:
+                        payload = response.read()
 
                 logger.debug(f"mqtt_publish_queue_processor_task: topic={msg.topic}, type={payload.__class__}, payload={payload if isinstance(payload, str) else msg.payload}")
 

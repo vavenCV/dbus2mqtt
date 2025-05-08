@@ -90,7 +90,7 @@ class FlowActionMqttPublishConfig:
     topic: str
     payload_template: str | dict[str, Any]
     type: Literal["mqtt_publish"] = "mqtt_publish"
-    payload_type: Literal["json", "yaml", "text"] = "json"
+    payload_type: Literal["json", "yaml", "text", "binary"] = "json"
 
 FlowActionConfig = Annotated[
     FlowActionMqttPublishConfig | FlowActionContextSetConfig,

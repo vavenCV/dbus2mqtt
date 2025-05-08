@@ -41,6 +41,22 @@ When triggered, the following context parameters are available
 
 ### dbus_signal
 
+DBus signals triggers must be configured with an anterface and path. Note that only subscribed signals can be configured as a trigger.
+
+| key | description  |
+|------|-------------|
+| interface | interface to filter on, e.g. 'org.freedesktop.DBus.Properties' |
+| signal    | signal name to filter on, e.g. PropertiesChanged |
+
+When triggered, the following context parameters are available
+
+| name | type | description |
+|------|------|-------------|
+| bus_name  | string | bus_name of the object that was registered on dbus |
+| path      | string | bus_name path of the object that was registered on dbus |
+| interface | string | name of interface for which the signal was triggered |
+| args      | list   | signal arguments, list of objects |
+
 ### bus_name_added
 
 ```yaml
