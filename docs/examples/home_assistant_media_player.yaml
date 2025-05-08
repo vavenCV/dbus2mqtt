@@ -56,13 +56,13 @@ dbus:
             - type: context_set
               context:
                 mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
-                path: /org/mpris/MediaPlayer2
+                mpris_path: /org/mpris/MediaPlayer2
             - type: context_set
               context:
                 player_properties: |
-                  {{ dbus_call(mpris_bus_name, path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) }}
+                  {{ dbus_call(mpris_bus_name, mpris_path, 'org.freedesktop.DBus.Properties', 'GetAll', ['org.mpris.MediaPlayer2.Player']) }}
                 volume: |
-                  {{ dbus_property_get(mpris_bus_name, path, 'org.mpris.MediaPlayer2.Player', 'Volume', 0) }}
+                  {{ dbus_property_get(mpris_bus_name, mpris_path, 'org.mpris.MediaPlayer2.Player', 'Volume', 0) }}
             - type: mqtt_publish
               topic: dbus2mqtt/org.mpris.MediaPlayer2/state
               payload_type: json
@@ -72,6 +72,26 @@ dbus:
                     | combine(player_properties)
                     | combine({ 'Volume': volume })
                 }}
+        - name: "MPRIS publish local artUrl"
+          # mpris:artUrl can have a file:// or http:// schema
+          # Home Assistant is unable to access file:// so we use MQTT for that
+          triggers:
+            - type: bus_name_added
+            - type: dbus_signal
+              interface: org.freedesktop.DBus.Properties
+              signal: PropertiesChanged
+          actions:
+            # - type: context_set
+            #   context:
+            #     mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
+            - type: context_set
+              context:
+                artUrl: "{{ dbus_property_get(bus_name, path, 'org.mpris.MediaPlayer2.Player', 'Metadata', {}).get('mpris:artUrl') }}"
+            - type: mqtt_publish
+              topic: dbus2mqtt/org.mpris.MediaPlayer2/artUrlImage
+              payload_type: binary
+              payload_template: |
+                {{ artUrl if artUrl and artUrl.startswith('file://') else None }}
         - name: "MPRIS player removed"
           triggers:
             - type: bus_name_removed

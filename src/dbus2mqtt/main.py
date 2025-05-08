@@ -41,13 +41,13 @@ async def dbus_processor_task(app_context: AppContext, flow_scheduler: FlowSched
 
 async def mqtt_processor_task(app_context: AppContext):
 
-    mqtt_client = MqttClient(app_context)
+    loop = asyncio.get_running_loop()
+    mqtt_client_run_future = loop.create_future()
+
+    mqtt_client = MqttClient(app_context, loop)
 
     mqtt_client.connect()
     mqtt_client.client.loop_start()
-
-    loop = asyncio.get_running_loop()
-    mqtt_client_run_future = loop.create_future()
 
     try:
         await asyncio.gather(
