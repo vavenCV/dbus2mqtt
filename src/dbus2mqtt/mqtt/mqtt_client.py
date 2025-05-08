@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class MqttClient:
 
-    def __init__(self, app_context: AppContext):
+    def __init__(self, app_context: AppContext, loop):
         self.config = app_context.config.mqtt
         self.event_broker = app_context.event_broker
 
@@ -34,6 +34,9 @@ class MqttClient:
 
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+
+        self.loop = loop
+        self.connected_event = asyncio.Event()
 
     def connect(self):
 
@@ -62,9 +65,12 @@ class MqttClient:
                 elif type == "text":
                     payload = str(payload)
 
-                logger.debug(f"mqtt_publish_queue_processor_task: payload={payload}")
-                self.client.publish(topic=msg.topic, payload=payload)
+                logger.debug(f"mqtt_publish_queue_processor_task: topic={msg.topic}, type={payload.__class__}, payload={payload if isinstance(payload, str) else msg.payload}")
 
+                if first_message:
+                    await asyncio.wait_for(self.connected_event.wait(), timeout=5)
+
+                self.client.publish(topic=msg.topic, payload=payload or "").wait_for_publish(timeout=1000)
                 if first_message:
                     logger.info(f"First message published: topic={msg.topic}, payload={payload}")
                     first_message = False
@@ -73,12 +79,6 @@ class MqttClient:
                 logger.warning(f"mqtt_publish_queue_processor_task: Exception {e}", exc_info=True)
             finally:
                 self.event_broker.mqtt_publish_queue.async_q.task_done()
-
-
-    async def run(self):
-        """Runs the MQTT loop in a non-blocking way with asyncio."""
-        self.client.loop_start()  # Runs Paho's loop in a background thread
-        await asyncio.Event().wait()  # Keeps the coroutine alive
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client: mqtt.Client, userdata, flags, reason_code, properties):
@@ -89,6 +89,8 @@ class MqttClient:
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             client.subscribe("dbus2mqtt/#", options=SubscribeOptions(noLocal=True))
+
+            self.loop.call_soon_threadsafe(self.connected_event.set)
 
     def on_message(self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage):
 
