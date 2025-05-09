@@ -1,7 +1,7 @@
 import json
 import re
 
-import dbus_next.signature as dbus_signature
+import dbus_fast.signature as dbus_signature
 
 
 def _variant_serializer(obj):
@@ -10,7 +10,7 @@ def _variant_serializer(obj):
     return obj
 
 def unwrap_dbus_object(o):
-    # an easy way to get rid of dbus_next.signature.Variant types
+    # an easy way to get rid of dbus_fast.signature.Variant types
     res = json.dumps(o, default=_variant_serializer)
     json_obj = json.loads(res)
     return json_obj

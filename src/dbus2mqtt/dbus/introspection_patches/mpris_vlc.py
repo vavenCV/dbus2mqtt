@@ -1,4 +1,4 @@
-import dbus_next.introspection as dbus_introspection
+import dbus_fast.introspection as dbus_introspection
 
 # taken from https://code.videolan.org/videolan/vlc/-/blob/master/modules/control/dbus/dbus_introspect.h
 mpris_introspection_vlc = dbus_introspection.Node.parse("""\

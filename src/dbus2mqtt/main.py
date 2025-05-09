@@ -5,7 +5,7 @@ import sys
 from typing import cast
 
 import colorlog
-import dbus_next.aio as dbus_aio
+import dbus_fast.aio as dbus_aio
 import dotenv
 
 from dbus2mqtt import AppContext

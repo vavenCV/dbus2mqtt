@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-import dbus_next.aio as dbus_aio
+import dbus_fast.aio as dbus_aio
 
 from dbus2mqtt.config import InterfaceConfig, SubscriptionConfig
 
