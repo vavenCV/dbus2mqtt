@@ -174,14 +174,16 @@ class FlowProcessor:
     async def _process_flow_trigger(self, flow_trigger_message: FlowTriggerMessage):
 
         trigger_str = self._trigger_config_to_str(flow_trigger_message.flow_trigger_config)
-        log_message = f"on_trigger: {trigger_str}, time={flow_trigger_message.timestamp.isoformat()}"
+        flow_str = flow_trigger_message.flow_config.name or flow_trigger_message.flow_config.id
+
+        log_message = f"on_trigger: {trigger_str}, flow={flow_str}, time={flow_trigger_message.timestamp.isoformat()}"
+
         if flow_trigger_message.flow_trigger_config.type != "schedule":
             logger.info(log_message)
         else:
             logger.debug(log_message)
 
         flow_id = flow_trigger_message.flow_config.id
-        # flow_name = flow_trigger_message.flow_config.name
 
         flow = self._flows[flow_id]
         await flow.execute_actions(trigger_context=flow_trigger_message.trigger_context)

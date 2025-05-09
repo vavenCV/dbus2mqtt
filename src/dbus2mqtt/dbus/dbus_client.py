@@ -1,13 +1,11 @@
 import json
 import logging
-import re
 
 from datetime import datetime
 from typing import Any
 
-import dbus_next
-import dbus_next.aio as dbus_aio
-import dbus_next.introspection as dbus_introspection
+import dbus_fast.aio as dbus_aio
+import dbus_fast.introspection as dbus_introspection
 
 from dbus2mqtt import AppContext
 from dbus2mqtt.config import InterfaceConfig, SubscriptionConfig
@@ -23,12 +21,6 @@ from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
 
 logger = logging.getLogger(__name__)
 
-# dbus_next path to support https://docs.flatpak.org/en/latest/portal-api-reference.html
-# Although not correct, flatpak exposes properties with names containing '-'
-# This is failing assertions in dbus_next
-# original: r'^[A-Za-z_][A-Za-z0-9_]*$'
-# patched:  r'^[A-Za-z_][A-Za-z0-9_-]*$'
-dbus_next.validators._element_re = re.compile(r'^[A-Za-z_][A-Za-z0-9_-]*$')
 
 class DbusClient:
 
@@ -91,23 +83,23 @@ class DbusClient:
 
         return proxy_object, bus_name_subscriptions
 
-    def _dbus_next_signal_publisher(self, dbus_signal_state: dict[str, Any], *args):
+    def _dbus_fast_signal_publisher(self, dbus_signal_state: dict[str, Any], *args):
         unwrapped_args = unwrap_dbus_objects(args)
         self.event_broker.on_dbus_signal(
             DbusSignalWithState(**dbus_signal_state, args=unwrapped_args)
         )
 
-    def _dbus_next_signal_handler(self, signal: dbus_introspection.Signal, state: dict[str, Any]) -> Any:
+    def _dbus_fast_signal_handler(self, signal: dbus_introspection.Signal, state: dict[str, Any]) -> Any:
         expected_args = len(signal.args)
 
         if expected_args == 1:
-            return lambda a: self._dbus_next_signal_publisher(state, a)
+            return lambda a: self._dbus_fast_signal_publisher(state, a)
         elif expected_args == 2:
-            return lambda a, b: self._dbus_next_signal_publisher(state, a, b)
+            return lambda a, b: self._dbus_fast_signal_publisher(state, a, b)
         elif expected_args == 3:
-            return lambda a, b, c: self._dbus_next_signal_publisher(state, a, b, c)
+            return lambda a, b, c: self._dbus_fast_signal_publisher(state, a, b, c)
         elif expected_args == 4:
-            return lambda a, b, c, d: self._dbus_next_signal_publisher(state, a, b, c, d)
+            return lambda a, b, c, d: self._dbus_fast_signal_publisher(state, a, b, c, d)
         raise ValueError("Unsupported nr of arguments")
 
     async def _subscribe_interface(self, bus_name: str, path: str, introspection: dbus_introspection.Node, interface: dbus_introspection.Interface, subscription_config: SubscriptionConfig, si: InterfaceConfig) -> SubscribedInterface:
@@ -132,7 +124,7 @@ class DbusClient:
                     "signal_config": signal_config,
                 }
 
-                handler = self._dbus_next_signal_handler(interface_signal, dbus_signal_state)
+                handler = self._dbus_fast_signal_handler(interface_signal, dbus_signal_state)
                 obj_interface.__getattribute__(on_signal_method_name)(handler)
                 logger.info(f"subscribed with signal_handler: signal={signal_config.signal}, bus_name={bus_name}, path={path}, interface={interface.name}")
 

@@ -106,7 +106,7 @@ dbus2mqtt leverages [jsonargparse](https://jsonargparse.readthedocs.io/en/stable
 ### MQTT and D-Bus connection details
 
 ```bash
-# dbus_next configuration
+# dbus_fast configuration
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
 
 # dbus2mqtt configuration
