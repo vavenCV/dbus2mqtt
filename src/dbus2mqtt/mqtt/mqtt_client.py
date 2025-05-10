@@ -66,8 +66,13 @@ class MqttClient:
                 elif isinstance(msg.payload, dict) and type == "yaml":
                     payload = yaml.dump(msg.payload)
                 elif isinstance(msg.payload, ParseResult) and type == "binary":
-                    with urlopen(msg.payload.geturl()) as response:
-                        payload = response.read()
+                    try:
+                        with urlopen(msg.payload.geturl()) as response:
+                            payload = response.read()
+                    except Exception as e:
+                        # In case failing uri reads, we still publish an empty msg to avoid stale data
+                        payload = None
+                        logger.warning(f"mqtt_publish_queue_processor_task: Exception {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
 
                 payload_log_msg = payload if isinstance(payload, str) else msg.payload
                 logger.debug(f"mqtt_publish_queue_processor_task: topic={msg.topic}, type={payload.__class__}, payload={payload_log_msg}")

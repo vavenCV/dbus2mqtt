@@ -74,15 +74,11 @@ mqtt:
       json_attributes_topic: dbus2mqtt/org.mpris.MediaPlayer2/state
       value_template: >-
         {% set status = value_json.PlaybackStatus %}
-        {% if status == 'Playing' %}
-          playing
-        {% elif status == 'Paused' %}
-          paused
-        {% elif status == 'Stopped' %}
-          idle
-        {% else %}
-          off
-        {% endif %}
+        {{ {'Playing': 'playing', 'Paused': 'paused', 'Stopped': 'idle'}.get(status, 'off') }}
+
+  image:
+    - name: MPRIS Media Player MQTT image
+      image_topic: dbus2mqtt/org.mpris.MediaPlayer2/artUrlImage
 
 media_player:
   - platform: media_player_template
@@ -102,14 +98,24 @@ media_player:
         album_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:album', '') }}"
         artist_template: "{{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:artist', ['']) | first }}"
 
-        # mpris:artUrl is referencing a local file when firefox is used, for now this will provide Youtube img support
+        # mpris:artUrl might contain a file:// schema. In these cases we rely on images published via MQTT
         media_image_url_template: >-
-          {{ (state_attr('sensor.mpris_media_player', 'Metadata') or {}).get('xesam:url', '')
-            | regex_replace(
-                find='https:\/\/www\\.youtube\\.com\/watch\\?v=([^&]+).*',
-                replace='https://img.youtube.com/vi/\\1/maxresdefault.jpg'
-              )
-          }}
+          {% set mpris_metadata = state_attr('sensor.mpris_media_player', 'Metadata') or {} %}
+          {% set mpris_art_url = mpris_metadata.get('mpris:artUrl', '') %}
+          {% set mpris_url = mpris_metadata.get('xesam:url') %}
+
+          {% if mpris_art_url.startswith('http') %}
+            {{ mpris_art_url }}
+          {% elif mpris_art_url.startswith('file://') %}
+            http://127.0.0.1:8123{{ state_attr('image.mpris_media_player_mqtt_image', 'entity_picture') }}
+          {% else %}
+            {{
+                mpris_url | regex_replace(
+                  find='https:\/\/www\\.youtube\\.com\/watch\\?v=([^&]+).*',
+                  replace='https://img.youtube.com/vi/\\1/maxresdefault.jpg'
+                )
+            }}
+          {% endif %}
 
         turn_off:
           service: mqtt.publish
