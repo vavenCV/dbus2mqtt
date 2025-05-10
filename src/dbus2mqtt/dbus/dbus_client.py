@@ -15,6 +15,9 @@ from dbus2mqtt.dbus.dbus_util import (
     unwrap_dbus_object,
     unwrap_dbus_objects,
 )
+from dbus2mqtt.dbus.introspection_patches.mpris_playerctl import (
+    mpris_introspection_playerctl,
+)
 from dbus2mqtt.dbus.introspection_patches.mpris_vlc import mpris_introspection_vlc
 from dbus2mqtt.event_broker import DbusSignalWithState, MqttMessage
 from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
@@ -164,6 +167,10 @@ class DbusClient:
             introspection = mpris_introspection_vlc
         else:
             introspection = await self.bus.introspect(bus_name, path)
+
+        # MPRIS: If no introspection data is available, load a default
+        if path == "/org/mpris/MediaPlayer2" and bus_name.startswith("org.mpris.MediaPlayer2.") and len(introspection.interfaces) == 0:
+            introspection = mpris_introspection_playerctl
 
         return introspection
 
