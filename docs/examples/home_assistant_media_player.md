@@ -35,7 +35,7 @@ The following setup is known to work with Home Assistant.
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
 | `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✅ |  |
 | `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |    |  |
-| `Chromium`   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✔️ | Not working when running as snap |
+| `Chromium`   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✔️ | Images not working when Chromium is running as snap |
 
 More players that support MPRIS can be found here: <https://wiki.archlinux.org/title/MPRIS>
 
