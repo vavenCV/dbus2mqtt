@@ -6,8 +6,10 @@ name: docker-stable releases
       - main
     paths:
       - "docker/**"
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Publish Python Package"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
