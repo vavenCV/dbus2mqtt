@@ -69,18 +69,19 @@ class MqttClient:
                     with urlopen(msg.payload.geturl()) as response:
                         payload = response.read()
 
-                logger.debug(f"mqtt_publish_queue_processor_task: topic={msg.topic}, type={payload.__class__}, payload={payload if isinstance(payload, str) else msg.payload}")
+                payload_log_msg = payload if isinstance(payload, str) else msg.payload
+                logger.debug(f"mqtt_publish_queue_processor_task: topic={msg.topic}, type={payload.__class__}, payload={payload_log_msg}")
 
                 if first_message:
                     await asyncio.wait_for(self.connected_event.wait(), timeout=5)
 
                 self.client.publish(topic=msg.topic, payload=payload or "").wait_for_publish(timeout=1000)
                 if first_message:
-                    logger.info(f"First message published: topic={msg.topic}, payload={payload}")
+                    logger.info(f"First message published: topic={msg.topic}, payload={payload_log_msg}")
                     first_message = False
 
             except Exception as e:
-                logger.warning(f"mqtt_publish_queue_processor_task: Exception {e}", exc_info=True)
+                logger.warning(f"mqtt_publish_queue_processor_task: Exception {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
             finally:
                 self.event_broker.mqtt_publish_queue.async_q.task_done()
 
