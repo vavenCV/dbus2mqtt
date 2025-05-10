@@ -162,7 +162,17 @@ class FlowProcessor:
                 await self._process_flow_trigger(flow_trigger_message)
 
             except Exception as e:
-                logger.warning(f"flow_processor_task: Exception {e}", exc_info=True)
+                # exc_info is only set when running in verbose mode to avoid lots of stack traces being printed
+                # while flows are still running and the DBus object was just removed. Some examples:
+
+                log_level = logging.WARN
+
+                # 1: error during context_set
+                # WARNING:dbus2mqtt.flow.flow_processor:flow_processor_task: Exception The name org.mpris.MediaPlayer2.firefox.instance_1_672 was not provided by any .service files
+                if "was not provided by any .service files" in str(e):
+                    log_level = logging.DEBUG
+
+                logger.log(log_level, f"flow_processor_task: Exception {e}", exc_info=logger.isEnabledFor(logging.DEBUG))
             finally:
                 self.event_broker.flow_trigger_queue.async_q.task_done()
 
