@@ -36,6 +36,8 @@ The following setup is known to work with Home Assistant.
 | `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✅ |  |
 | `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |    |  |
 | `Chromium`   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✔️ | Images not working when Chromium is running as snap |
+| `Kodi`       | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Requires Kodi plugin [MediaPlayerRemoteInterface](https://github.com/wastis/MediaPlayerRemoteInterface)<br /> Requires path to be set to '/'<br />Signals not working due to non-defaut path |
+
 
 More players that support MPRIS can be found here: <https://wiki.archlinux.org/title/MPRIS>
 

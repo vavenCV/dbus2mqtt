@@ -79,8 +79,8 @@ cp docs/examples/home_assistant_media_player.yaml $HOME/.config/dbus2mqtt/config
 cp .env.example $HOME/.config/dbus2mqtt/.env
 
 # run image and automatically start on reboot
-docker pull jwnmulder/dbus2mqtt
-docker run --detach --name dbus2mqtt \
+sudo docker pull jwnmulder/dbus2mqtt
+sudo docker run --detach --name dbus2mqtt \
   --volume "$HOME"/.config/dbus2mqtt:"$HOME"/.config/dbus2mqtt \
   --volume /run/user:/run/user \
   --env DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
