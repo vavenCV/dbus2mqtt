@@ -63,6 +63,8 @@ jobs:
           # type=ref,event=branch
           # type=ref,event=pr
           # type=semver,pattern={{version}},value=${{ matrix.version }}
+          flavor:
+            latest=false
           labels: |
             org.opencontainers.image.source=https://github.com/jwnmulder/dbus2mqtt
 
