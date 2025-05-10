@@ -40,7 +40,7 @@ dbus:
             - property: Volume
 
       flows:
-        - name: "MPRIS publish player state"
+        - name: "publish player state"
           triggers:
             - type: bus_name_added
             - type: schedule
@@ -70,7 +70,7 @@ dbus:
                     | combine(player_properties)
                 }}
 
-        - name: "MPRIS publish local artUrl"
+        - name: "publish local art image"
           # mpris:artUrl can have a file:// or http:// schema
           # Home Assistant is unable to access file:// so we use MQTT for that
           triggers:
@@ -88,7 +88,7 @@ dbus:
               payload_template: |
                 {{ artUrl if artUrl and artUrl.startswith('file://') else None }}
 
-        - name: "MPRIS player removed"
+        - name: "player removed"
           triggers:
             - type: bus_name_removed
             # filter: # TODO: Check if this is the last or inactive one #
