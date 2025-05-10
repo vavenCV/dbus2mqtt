@@ -33,8 +33,9 @@ The following setup is known to work with Home Assistant.
 
 | Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
-| `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✔️ | Youtube image only |
-| `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | | |
+| `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✅ |  |
+| `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |    |  |
+| `Chromium`   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✔️ | Not working when running as snap |
 
 More players that support MPRIS can be found here: <https://wiki.archlinux.org/title/MPRIS>
 
