@@ -106,7 +106,6 @@ class MqttClient:
 
     def on_message(self, client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage):
 
-        print(userdata)
         payload = msg.payload.decode()
         if msg.retain:
             logger.info(f"on_message: skipping msg with retain=True, topic={msg.topic}, payload={payload}")
