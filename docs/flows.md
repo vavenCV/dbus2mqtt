@@ -53,7 +53,7 @@ When triggered, the following context parameters are available
 | name | type | description |
 |------|------|-------------|
 | bus_name  | string | bus_name of the object that was registered on dbus |
-| path      | string | bus_name path of the object that was registered on dbus |
+| path      | string | path of the object that was registered on dbus |
 | interface | string | name of interface for which the signal was triggered |
 | args      | list   | signal arguments, list of objects |
 
@@ -68,7 +68,7 @@ When triggered, the following context parameters are available
 | name | description |
 |------|-------------|
 | bus_name | bus_name of the object that was registered on dbus |
-| path     | bus_name path of the object that was registered on dbus |
+| path     | path of the object that was registered on dbus |
 
 ### object_removed
 
@@ -81,7 +81,7 @@ When triggered, the following context parameters are available
 | name | description |
 |------|-------------|
 | bus_name | bus_name of the object that was registered on dbus |
-| path     | bus_name path of the object that was registered on dbus |
+| path     | path of the object that was registered on dbus |
 
 ## Flow actions
 
