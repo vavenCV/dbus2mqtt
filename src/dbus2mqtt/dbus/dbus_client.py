@@ -289,7 +289,6 @@ class DbusClient:
                             path=path,
                             interface_name=interface.name,
                             subscription_config=subscription
-                            # interface_config=si
                         ))
 
         if len(configured_signals) > 0:
