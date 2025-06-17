@@ -23,6 +23,7 @@ async def test_bus_name_added_trigger():
         FlowActionContextSetConfig(
             global_context={
                 "res": {
+                    "trigger_type": "{{ trigger_type }}",
                     "bus_name": "{{ bus_name }}",
                     "path": "{{ path }}",
                 }
@@ -43,6 +44,7 @@ async def test_bus_name_added_trigger():
 
     # expected context from _trigger_bus_name_added
     assert processor._global_context["res"] == {
+        "trigger_type": "bus_name_added",
         "bus_name": "test-bus-name",
         "path": "/some/test/path",
     }
@@ -57,6 +59,7 @@ async def test_bus_name_removed_trigger():
         FlowActionContextSetConfig(
             global_context={
                 "res": {
+                    "trigger_type": "{{ trigger_type }}",
                     "bus_name": "{{ bus_name }}",
                     "path": "{{ path }}"
                 }
@@ -77,6 +80,7 @@ async def test_bus_name_removed_trigger():
 
     # expected context from _trigger_bus_name_removed
     assert processor._global_context["res"] == {
+        "trigger_type": "bus_name_removed",
         "bus_name": "test-bus-name",
         "path": "/some/test/path",
     }
@@ -91,6 +95,7 @@ async def test_object_added_trigger():
         FlowActionContextSetConfig(
             global_context={
                 "res": {
+                    "trigger_type": "{{ trigger_type }}",
                     "bus_name": "{{ bus_name }}",
                     "path": "{{ path }}",
                 }
@@ -111,6 +116,7 @@ async def test_object_added_trigger():
 
     # expected context from _trigger_object_added
     assert processor._global_context["res"] == {
+        "trigger_type": "object_added",
         "bus_name": "test-bus-name",
         "path": "/some/test/path",
     }
@@ -125,6 +131,7 @@ async def test_object_removed_trigger():
         FlowActionContextSetConfig(
             global_context={
                 "res": {
+                    "trigger_type": "{{ trigger_type }}",
                     "bus_name": "{{ bus_name }}",
                     "path": "{{ path }}"
                 }
@@ -145,6 +152,7 @@ async def test_object_removed_trigger():
 
     # expected context from _trigger_object_removed
     assert processor._global_context["res"] == {
+        "trigger_type": "object_removed",
         "bus_name": "test-bus-name",
         "path": "/some/test/path",
     }
@@ -163,9 +171,11 @@ async def test_dbus_signal_trigger():
         FlowActionContextSetConfig(
             global_context={
                 "res": {
+                    "trigger_type": "{{ trigger_type }}",
                     "bus_name": "{{ bus_name }}",
                     "path": "{{ path }}",
                     "interface": "{{ interface }}",
+                    "signal": "{{ signal }}",
                     "args": "{{ args }}"
                 }
             }
@@ -200,8 +210,10 @@ async def test_dbus_signal_trigger():
 
     # validate results
     assert processor._global_context["res"] == {
+        "trigger_type": "dbus_signal",
         "bus_name": bus_name,
         "path": "/",
         "interface": "test-interface-name",
+        "signal": "TestSignal",
         "args": ["first-arg", "second-arg"]
     }

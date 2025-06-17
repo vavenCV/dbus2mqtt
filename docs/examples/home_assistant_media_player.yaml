@@ -57,6 +57,9 @@ dbus:
               context:
                 mpris_bus_name: '{{ dbus_list("org.mpris.MediaPlayer2.*") | first }}'
                 mpris_path: /org/mpris/MediaPlayer2
+                # Some players return stale position if GetAll is executed immediately after a seeked signal.
+                # By storing the seeked position it can be used to override Position below
+                seeked_position: '{{ args[0] if trigger_type == "dbus_signal" and signal == "Seeked" else None }}'
             - type: context_set
               context:
                 player_properties: |
@@ -68,6 +71,7 @@ dbus:
                 {{
                     { 'bus_name': mpris_bus_name }
                     | combine(player_properties)
+                    | combine ({ 'Position': seeked_position } if seeked_position else {})
                 }}
 
         - name: "publish local art image"
