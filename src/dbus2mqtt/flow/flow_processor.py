@@ -109,13 +109,15 @@ class FlowActionContext:
 
         return res
 
-    async def execute_actions(self, trigger_context: dict[str, Any] | None):
+    async def execute_actions(self, trigger_type: str, trigger_context: dict[str, Any] | None):
 
         # per flow execution context
         context = FlowExecutionContext(
             self.flow_config.name,
             global_flows_context=self.global_flows_context,
             flow_context=self.flow_context)
+
+        context.context["trigger_type"] = trigger_type
 
         if trigger_context:
             context.context.update(trigger_context)
@@ -194,6 +196,7 @@ class FlowProcessor:
 
     async def _process_flow_trigger(self, flow_trigger_message: FlowTriggerMessage):
 
+        trigger_type = flow_trigger_message.flow_trigger_config.type
         trigger_str = self._trigger_config_to_str(flow_trigger_message)
         flow_str = flow_trigger_message.flow_config.name or flow_trigger_message.flow_config.id
 
@@ -207,4 +210,4 @@ class FlowProcessor:
         flow_id = flow_trigger_message.flow_config.id
 
         flow = self._flows[flow_id]
-        await flow.execute_actions(trigger_context=flow_trigger_message.trigger_context)
+        await flow.execute_actions(trigger_type, trigger_context=flow_trigger_message.trigger_context)

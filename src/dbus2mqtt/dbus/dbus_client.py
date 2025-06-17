@@ -713,6 +713,7 @@ class DbusClient:
                                 "bus_name": signal.bus_name,
                                 "path": signal.path,
                                 "interface": signal.interface_name,
+                                "signal": signal.signal_config.signal,
                                 "args": signal.args
                             }
                             trigger_message = FlowTriggerMessage(
