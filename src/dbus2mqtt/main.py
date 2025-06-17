@@ -107,9 +107,19 @@ def main():
 
     config: Config = cast(Config, parser.instantiate_classes(cfg))
 
+    class NamePartsFilter(logging.Filter):
+        def filter(self, record):
+            record.name_last = record.name.rsplit('.', 1)[-1]
+            # record.name_first = record.name.split('.', 1)[0]
+            # record.name_short = record.name
+            # if record.name.startswith("dbus2mqtt"):
+            #     record.name_short = record.name.split('.', 1)[-1]
+            return True
+
     handler = colorlog.StreamHandler(stream=sys.stdout)
+    handler.addFilter(NamePartsFilter())
     handler.setFormatter(colorlog.ColoredFormatter(
-        '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+        '%(log_color)s%(levelname)s:%(name_last)s:%(message)s',
         log_colors={
             "DEBUG": "light_black",
             "WARNING": "yellow",
