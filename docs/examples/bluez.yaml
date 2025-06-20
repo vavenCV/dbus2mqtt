@@ -44,8 +44,14 @@ dbus:
         - interface: org.freedesktop.DBus.Properties
           signals:
             - signal: PropertiesChanged
+
+        - interface: org.bluez.Device1
+          mqtt_command_topic: dbus2mqtt/bluez/hci0/command
           methods:
-            - method: GetAll
+            - method: Connect
+            - method: Disconnect
+            - method: Pair
+            - method: CancelPairing
 
       flows:
         - name: "publish device state"
