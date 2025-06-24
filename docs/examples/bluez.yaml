@@ -33,8 +33,11 @@ dbus:
             - type: mqtt_publish
               topic: dbus2mqtt/bluez/hci0
               payload_type: json
-              payload_template:
-                hci0: "{{ adapter_properties }}"
+              payload_template: |
+                {{
+                    { 'dbus_object_path': path }
+                    | combine(adapter_properties)
+                }}
 
     - bus_name: org.bluez
       path: /org/bluez/hci0/dev_*
@@ -68,7 +71,11 @@ dbus:
             - type: mqtt_publish
               topic: dbus2mqtt/bluez/{{ path | replace('/org/bluez/', '') }}
               payload_type: json
-              payload_template: "{{ device_properties }}"
+              payload_template: |
+                {{
+                    { 'dbus_object_path': path }
+                    | combine(device_properties)
+                }}
         - name: "device removed"
           triggers:
             - type: object_removed
