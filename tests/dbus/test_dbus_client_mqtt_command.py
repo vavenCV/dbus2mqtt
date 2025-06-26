@@ -4,21 +4,95 @@ import pytest
 
 import dbus2mqtt.config as config
 
+from dbus2mqtt import AppContext
+from dbus2mqtt.dbus.dbus_client import DbusClient
 from dbus2mqtt.dbus.dbus_types import BusNameSubscriptions
 from dbus2mqtt.event_broker import MqttMessage
 from tests import mocked_app_context, mocked_dbus_client
 
 
 @pytest.mark.asyncio
-async def test_mqtt_command():
+async def test_method_only():
+    """ Mock contains 3 bus objects, test with valid method.
+        Expect the method to be called 2 times, once for each bus object with matching subscription
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "TestMethod2",
+            }
+        )
+    )
 
+    assert mocked_proxy_interface.call_test_method2.call_count == 2
+
+@pytest.mark.asyncio
+async def test_invalid_method():
+    """ Mock contains 3 bus objects, test with invalid method.
+        Expect the method to be called zero times
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "InvalidTestMethod",
+            }
+        )
+    )
+
+    assert mocked_proxy_interface.call_invalid_test_method.call_count == 0
+
+@pytest.mark.asyncio
+async def test_method_with_path():
+    """ Mock contains 3 bus objects, test with valid method and path.
+        Expect the method to be called 2 times, once for each bus name with matching path and subscription
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "TestMethod2",
+                "path": "/org/mpris/MediaPlayer2"
+            }
+        )
+    )
+
+    assert mocked_proxy_interface.call_test_method2.call_count == 2
+
+@pytest.mark.asyncio
+async def test_method_invalid_path():
+    """ Mock contains 3 bus objects, test with valid method and invalid path.
+        Expect the method to be called zero times
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "TestMethod2",
+                "path": "/invalid/path/to/object"
+            }
+        )
+    )
+
+    assert mocked_proxy_interface.call_test_method2.call_count == 0
+
+async def _publish_msg(msg: MqttMessage):
+
+    app_context = _mocked_app_context()
+    dbus_client, proxy_interface = _mocked_dbus_client(app_context)
+
+    await dbus_client._on_mqtt_msg(msg)
+
+    return proxy_interface
+
+def _mocked_app_context() -> AppContext:
     app_context = mocked_app_context()
-    dbus_client = mocked_dbus_client(app_context)
 
     app_context.config.dbus.subscriptions = [
             config.SubscriptionConfig(
-                bus_name="test.bus_name.*",
-                path="/path/to/object",
+                bus_name="org.mpris.MediaPlayer2.*",
+                path="/org/mpris/MediaPlayer2",
                 interfaces=[
                     config.InterfaceConfig(
                         interface="test-interface-name",
@@ -32,29 +106,33 @@ async def test_mqtt_command():
 
             )
         ]
+    return app_context
 
-    bus_name = "test.bus_name.testapp"
-    dbus_client.subscriptions[bus_name] = BusNameSubscriptions(bus_name, ":1:1")
+def _mocked_dbus_client(app_context: AppContext) -> tuple[DbusClient, MagicMock]:
 
-    mocked_proxy_object = MagicMock()
+    dbus_objects = [
+        ("org.mpris.MediaPlayer2.vlc", "/org/mpris/MediaPlayer2"),
+        ("org.mpris.MediaPlayer2.firefox", "/org/mpris/MediaPlayer2"),
+        ("org.mpris.MediaPlayer2.kodi", "/another/path/to/object"),
+    ]
+
+    dbus_client = mocked_dbus_client(app_context)
+
     mocked_proxy_interface = MagicMock()
+    mocked_proxy_interface.call_test_method1 = AsyncMock()
     mocked_proxy_interface.call_test_method2 = AsyncMock()
+    mocked_proxy_interface.call_invalid_test_method = AsyncMock()
 
-    mocked_proxy_object.get_interface.return_value = mocked_proxy_interface
+    index = 1
+    for bus_name, path in dbus_objects:
 
-    dbus_client.subscriptions[bus_name].path_objects["/path/to/object"] = mocked_proxy_object
+        dbus_client.subscriptions[bus_name] = BusNameSubscriptions(bus_name, f":1:{index}")
 
-    await dbus_client._on_mqtt_msg(
-        MqttMessage(
-            topic="dbus2mqtt/test/command",
-            payload={
-                "method": "TestMethod2",
-                "args": {
-                    "bus_name": "org.mpris.MediaPlayer2.vlc",
-                    "path": "/org/mpris/MediaPlayer2"
-                }
-            }
-        )
-    )
+        mocked_proxy_object = MagicMock()
+        mocked_proxy_object.get_interface.return_value = mocked_proxy_interface
 
-    assert mocked_proxy_interface.call_test_method2.call_count == 1
+        dbus_client.subscriptions[bus_name].path_objects[path] = mocked_proxy_object
+
+        index += 1
+
+    return dbus_client, mocked_proxy_interface
