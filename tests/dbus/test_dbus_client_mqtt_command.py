@@ -44,6 +44,40 @@ async def test_invalid_method():
     assert mocked_proxy_interface.call_invalid_test_method.call_count == 0
 
 @pytest.mark.asyncio
+async def test_method_with_bus_name():
+    """ Mock contains 3 bus objects, test with valid method and valid bus_name.
+        Expect the method to be called 1 time, once for each matching bus name and subscription
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "TestMethod2",
+                "bus_name": "org.mpris.MediaPlayer2.vlc"
+            }
+        )
+    )
+
+    assert mocked_proxy_interface.call_test_method2.call_count == 1
+
+@pytest.mark.asyncio
+async def test_method_invalid_bus_name():
+    """ Mock contains 3 bus objects, test with valid method and valid bus_name.
+        Expect the method to be called zero times
+    """
+    mocked_proxy_interface = await _publish_msg(
+        MqttMessage(
+            topic="dbus2mqtt/test/command",
+            payload={
+                "method": "TestMethod2",
+                "bus_name": "org.mpris.MediaPlayer2.non-existing"
+            }
+        )
+    )
+
+    assert mocked_proxy_interface.call_test_method2.call_count == 0
+
+@pytest.mark.asyncio
 async def test_method_with_path():
     """ Mock contains 3 bus objects, test with valid method and path.
         Expect the method to be called 2 times, once for each bus name with matching path and subscription
