@@ -141,18 +141,28 @@ dbus:
 
 This configuration will expose 2 methods. Triggering methods can be done by publishing json messages to the `dbus2mqtt/org.mpris.MediaPlayer2/command` MQTT topic. Arguments can be passed along in `args`.
 
-Note that methods are called on **all** bus_names matching the configured pattern
+Some examples that call methods  on **all** bus_names matching the configured pattern
 
 ```json
 {
-    "method" : "Play",
+    "method": "Play",
 }
 ```
 
 ```json
 {
-    "method" : "OpenUri",
+    "method": "OpenUri",
     "args": []
+}
+```
+
+To specifically target objects the properties `bus_name` and/or `path` can be used
+
+```json
+{
+    "method": "Play",
+    "bus_name": "org.mpris.MediaPlayer2.firefox",
+    "path": "/org/mpris/MediaPlayer2"
 }
 ```
 
