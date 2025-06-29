@@ -767,8 +767,8 @@ class DbusClient:
         matched_method = False
         matched_property = False
 
-        payload_bus_name = msg.payload.get("bus_name")
-        payload_path = msg.payload.get("path")
+        payload_bus_name = msg.payload.get("bus_name") or "*"
+        payload_path = msg.payload.get("path") or "*"
 
         payload_method = msg.payload.get("method")
         payload_method_args = msg.payload.get("args") or []
@@ -777,13 +777,14 @@ class DbusClient:
         payload_value = msg.payload.get("value")
 
         if payload_method is None and (payload_property is None or payload_value is None):
-            logger.info(f"on_mqtt_msg: Unsupported payload, missing 'method' or 'property/value', got method={payload_method}, property={payload_property}, value={payload_value} from {msg.payload}")
+            if msg.payload:
+                logger.info(f"on_mqtt_msg: Unsupported payload, missing 'method' or 'property/value', got method={payload_method}, property={payload_property}, value={payload_value} from {msg.payload}")
             return
 
         for [bus_name, bus_name_subscription] in self.subscriptions.items():
-            if payload_bus_name is None or payload_bus_name == bus_name:
+            if fnmatch.fnmatchcase(bus_name, payload_bus_name):
                 for [path, proxy_object] in bus_name_subscription.path_objects.items():
-                    if payload_path is None or payload_path == path:
+                    if fnmatch.fnmatchcase(path, payload_path):
                         for subscription_configs in self.config.get_subscription_configs(bus_name=bus_name, path=path):
                             for interface_config in subscription_configs.interfaces:
 
@@ -814,12 +815,6 @@ class DbusClient:
 
         if not matched_method and not matched_property:
             if payload_method:
-                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, active bus_names={list(self.subscriptions.keys())}")
+                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, method={payload_method}, bus_name={payload_bus_name}, path={payload_path or '*'}, active bus_names={list(self.subscriptions.keys())}")
             if payload_property:
-                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, property={payload_property}, active bus_names={list(self.subscriptions.keys())}")
-
-        # raw mode, payload contains: bus_name (specific or wildcard), path, interface_name
-        # topic: dbus2mqtt/raw (with allowlist check)
-
-        # predefined mode with topic matching from configuration
-        # topic: dbus2mqtt/MediaPlayer/command
+                logger.info(f"No configured or active dbus subscriptions for topic={msg.topic}, property={payload_property}, bus_name={payload_bus_name}, path={payload_path or '*'}, active bus_names={list(self.subscriptions.keys())}")

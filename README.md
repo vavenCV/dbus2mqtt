@@ -156,12 +156,12 @@ Some examples that call methods  on **all** bus_names matching the configured pa
 }
 ```
 
-To specifically target objects the properties `bus_name` and/or `path` can be used
+To specifically target objects the properties `bus_name` and/or `path` can be used. Both properties support wildcards
 
 ```json
 {
     "method": "Play",
-    "bus_name": "org.mpris.MediaPlayer2.firefox",
+    "bus_name": "*.firefox",
     "path": "/org/mpris/MediaPlayer2"
 }
 ```

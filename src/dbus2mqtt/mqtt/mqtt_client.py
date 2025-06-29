@@ -117,7 +117,7 @@ class MqttClient:
             return
 
         try:
-            json_payload = json.loads(payload)
+            json_payload = json.loads(payload) if payload else {}
             logger.debug(f"on_message: msg.topic={msg.topic}, msg.payload={json.dumps(json_payload)}")
             self.event_broker.on_mqtt_receive(MqttMessage(msg.topic, json_payload))
         except json.JSONDecodeError as e:
