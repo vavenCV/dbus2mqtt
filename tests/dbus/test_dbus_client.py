@@ -50,4 +50,4 @@ async def test_signal_handler_unwrap_args():
 
     # message args should be unwrapped
     assert mqtt_message is not None
-    assert mqtt_message.args == ["org.mpris.MediaPlayer2.Player", {"CanPause" : True}, []]
+    assert mqtt_message.args == ["org.mpris.MediaPlayer2.Player", {"CanPause": True}, []]

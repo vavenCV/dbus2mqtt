@@ -17,3 +17,21 @@ Execute the following command to run dbus2mqtt with the example configuration in
 ```bash
 uv run dbus2mqtt --config docs/examples/bluez.yaml
 ```
+
+## Commands
+
+The following table lists commands, their descriptions, and an example JSON payload for invoking them via MQTT.
+
+Dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/bluez/hci0/command`. Method calls will be done for all matching dbus objects.
+
+| Interface            | Method<br />Property  | Description                          | Example MQTT JSON Payload                          |
+|----------------------|-----------------------|--------------------------------------|-------------------------------------------------|
+| `org.bluez.Adapter1` | `StartDiscovery`      | Starts bluetooth discovery           | `{ "method": "StartDiscovery" }`                |
+| `org.bluez.Adapter1` | `StopDiscovery`       | Stops bluetooth discovery            | `{ "method": "StopDiscovery" }`                         |
+| `org.bluez.Device1` | `Connect`              |                                      | `{ "method": "Connect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
+| `org.bluez.Device1` | `Disconnect`           |                                      | `{ "method": "Disconnect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
+| `org.bluez.Device1` | `Pair`                 |                                      | `{ "method": "Pair", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
+| `org.bluez.Device1` | `CancelPairing`        |                                      | `{ "method": "CancelPairing", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
+
+
+https://manpages.ubuntu.com/manpages/noble/man5/org.bluez.
