@@ -100,10 +100,9 @@ class MqttClient:
             logger.warning(f"on_connect: Failed to connect: {reason_code}. Will retry connection")
         else:
             logger.info(f"on_connect: Connected to {self.config.host}:{self.config.port}")
-            # Subscribing in on_connect() means that if we lose the connection and
-            # reconnect then subscriptions will be renewed.
-            # TODO: Determine topics based on config
-            client.subscribe("dbus2mqtt/#", options=SubscribeOptions(noLocal=True))
+
+            subscriptions = [(t, SubscribeOptions(noLocal=True)) for t in self.config.subscription_topics]
+            client.subscribe(subscriptions)
 
             self.loop.call_soon_threadsafe(self.connected_event.set)
 
