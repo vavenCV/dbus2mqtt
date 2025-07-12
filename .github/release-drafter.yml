@@ -48,6 +48,4 @@ version-resolver:
   default: patch
 change-template: '* $TITLE (#$NUMBER)'
 template: |
-  ## Changes
-
   $CHANGES
