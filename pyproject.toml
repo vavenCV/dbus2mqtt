@@ -62,7 +62,9 @@ dev = [
     "pyright>=1.1.396",
     "pre-commit>=4.2.0",
     "pip>=25.0.1",
-    "pytest-asyncio>=1.0.0"
+    "pytest-asyncio>=1.0.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.15",
 ]
 
 [project.urls]
@@ -78,6 +80,9 @@ dbus2mqtt = "dbus2mqtt.main:main"
 [tool.taskipy.tasks]
 lint-ruff = "ruff check"
 lint-pyright = "pyright"
+build-docs = { cmd = "mkdocs build" }
+serve-docs = { cmd = "mkdocs serve" }
+deploy-docs = { cmd = "mkdocs gh-deploy" }
 
 [tool.pytest.ini_options]
 addopts = "-s"
