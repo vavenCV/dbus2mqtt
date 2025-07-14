@@ -10,7 +10,6 @@ local_scheme = "no-local-version"
 
 [project]
 name = "dbus2mqtt"
-# version = "0.1.0"
 dynamic = ["version"]
 description = """\
     General purpose DBus to MQTT bridge \
@@ -19,7 +18,7 @@ description = """\
     """
 readme = "README.md"
 license = "MIT"
-keywords = ["python", "mqtt", "mpris", "dbus", "home-assistant"]
+keywords = ["python", "mqtt", "jinja2", "bridge", "mpris", "dbus", "home-assistant", "bluez"]
 classifiers = [
     # https://pypi.org/classifiers/
     "Development Status :: 5 - Production/Stable",
@@ -62,15 +61,15 @@ dev = [
     "pyright>=1.1.396",
     "pre-commit>=4.2.0",
     "pip>=25.0.1",
-    "pytest-asyncio>=1.0.0"
+    "pytest-asyncio>=1.0.0",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.6.15",
 ]
 
 [project.urls]
-# Homepage = "https://example.com"
-# Documentation = "https://readthedocs.org"
-Repository = "https://github.com/jwnmulder/dbus2mqtt.git"
+Documentation = "https://jwnmulder.github.io/dbus2mqtt"
+Source = "https://github.com/jwnmulder/dbus2mqtt"
 Issues = "https://github.com/jwnmulder/dbus2mqtt/issues"
-# Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
 dbus2mqtt = "dbus2mqtt.main:main"
@@ -78,6 +77,9 @@ dbus2mqtt = "dbus2mqtt.main:main"
 [tool.taskipy.tasks]
 lint-ruff = "ruff check"
 lint-pyright = "pyright"
+build-docs = { cmd = "mkdocs build" }
+serve-docs = { cmd = "mkdocs serve" }
+deploy-docs = { cmd = "mkdocs gh-deploy" }
 
 [tool.pytest.ini_options]
 addopts = "-s"
