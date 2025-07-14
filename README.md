@@ -21,7 +21,7 @@ Initial testing has focused on MPRIS integration. A table of tested MPRIS player
 
 ## Getting started with dbus2mqtt
 
-Create a `config.yaml` file with the contents shown below. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic. Have a look at [docs/examples](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples.md) for more examples
+Create a `config.yaml` file with the contents shown below. This configuration will expose all bus properties from the `org.mpris.MediaPlayer2.Player` interface to MQTT on the `dbus2mqtt/org.mpris.MediaPlayer2/state` topic. Have a look at [docs/examples](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/index.md) for more examples
 
 ```yaml
 dbus:
@@ -97,7 +97,7 @@ sudo docker logs dbus2mqtt -f
 
 ## Examples
 
-This repository contains examples under [docs/examples](https://github.com/jwnmulder/dbus2mqtt/blob/main//docs/examples.md). The most complete one being [MPRIS to Home Assistant Media Player integration](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md)
+This repository contains examples under [docs/examples](https://github.com/jwnmulder/dbus2mqtt/blob/main//docs/examples/index.md). The most complete one being [MPRIS to Home Assistant Media Player integration](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/examples/home_assistant_media_player.md)
 
 ## Configuration reference
 
@@ -194,7 +194,7 @@ dbus:
 
 ## Flows
 
-A reference of all supported flow triggers and actions can be found on [Flows](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/flows.md)
+A reference of all supported flow triggers and actions can be found on [Flows](https://github.com/jwnmulder/dbus2mqtt/blob/main/docs/flows/index.md)
 
 ## Jinja templating
 
