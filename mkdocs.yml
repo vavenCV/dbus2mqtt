@@ -6,7 +6,7 @@ copyright: Copyright © Jan-Willem Mulder 2025
 repo_name: jwnmulder/dbus2mqtt
 repo_url: https://github.com/jwnmulder/dbus2mqtt
 edit_uri: edit/main/docs/
-# strict: true
+strict: true
 
 # Some examples to have a look at
 # https://github.com/mkdocstrings/mkdocstrings/blob/main/mkdocs.yml
@@ -14,52 +14,90 @@ edit_uri: edit/main/docs/
 # https://github.com/facelessuser/pymdown-extensions/blob/main/mkdocs.yml
 
 validation:
-  omitted_files: warn
+  omitted_files: info
   absolute_links: warn
   unrecognized_links: warn
+  anchors: warn
 
 theme:
   name: material
   language: en
   features:
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation
+    - navigation.indexes
+    - navigation.tabs
+
+    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/
+    # - content.action.edit
+
+    # others
     # - navigation.expand
-    # - navigation.indexes
     # - navigation.sections
-    # - navigation.tabs
     # - navigation.top
     # - content.tabs.link
     # - navigation.tracking
-    - announce.dismiss
+    # - announce.dismiss
     # - navigation.tabs
-    - navigation.top
-    - navigation.instant
-    - navigation.indexes
-    - toc.follow
-    - content.tabs.link
-    - search.share
-    - search.highlight
-    - search.suggest
-    - content.code.copy
+    # - navigation.top
+    # - navigation.instant
+    # - navigation.indexes
+    # - toc.follow
+    # - content.tabs.link
+    # - search.share
+    # - search.highlight
+    # - search.suggest
+    # - content.code.copy
     # - content.code.annotations
+
+# nav from https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/?h=navigation#navigation-tabs-with-tabs
+# Home
+# Getting started
+# Setup
+# Reference
+## CLI
+## Configuration files
+# Changelog
+
+# nav from chezmoi
+# Home
+# User guide
+# Reference
+# Developer guide
+# Links
+# License
 
 nav:
   - Home: index.md
   # - User guide:
   # - installation - docker
-  - Flows: flows.md
+  - Flows:
+      - flows/index.md
+      - flows/flow_actions.md
+      - flows/flow_triggers.md
   # - References:
   - Examples:
-      - examples.md
+      - examples/index.md
       - examples/home_assistant_media_player.md
       - examples/bluez.md
       # - examples/dbus2mqtt_internal_state.md
       # - examples/linux_desktop.md
 
   - Developer guide:
-      - debugging.md
+      - developer/index.md
+      - developer/debugging_dbus.md
 
 # https://facelessuser.github.io/pymdown-extensions
 markdown_extensions:
+
+  # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+  - admonition
+
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#highlighting-inline-code-blocks
+  - pymdownx.inlinehilite
+
+  # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+  - pymdownx.superfences
+
   - pymdownx.snippets:
       base_path:
         - .
