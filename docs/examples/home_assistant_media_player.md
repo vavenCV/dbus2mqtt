@@ -34,10 +34,6 @@ To run, execute the following commands
 dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
 ```
 
-!!! note
-
-    testttt
-
 ## Tested configurations
 
 The following setup is known to work with Home Assistant.
