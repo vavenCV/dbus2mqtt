@@ -6,10 +6,6 @@
 
   "packageRules": [
     {
-      "matchJsonata": ["isBreaking"],
-      "dependencyDashboardApproval": true
-    },
-    {
       "matchFileNames": [".pre-commit-config.yaml"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
