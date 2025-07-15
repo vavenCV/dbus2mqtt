@@ -26,6 +26,7 @@ theme:
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation
     - navigation.indexes
     - navigation.tabs
+    # - navigation.tabs.sticky
 
     # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/
     # - content.action.edit
@@ -38,9 +39,7 @@ theme:
     # - navigation.tracking
     # - announce.dismiss
     # - navigation.tabs
-    # - navigation.top
     # - navigation.instant
-    # - navigation.indexes
     # - toc.follow
     # - content.tabs.link
     # - search.share
@@ -76,8 +75,8 @@ nav:
   # - installation - docker
   - Flows:
       - flows/index.md
-      - flows/flow_actions.md
       - flows/flow_triggers.md
+      - flows/flow_actions.md
   # - References:
   - Examples:
       - examples/index.md

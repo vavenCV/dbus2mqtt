@@ -77,9 +77,6 @@ dbus2mqtt = "dbus2mqtt.main:main"
 [tool.taskipy.tasks]
 lint-ruff = "ruff check"
 lint-pyright = "pyright"
-build-docs = { cmd = "mkdocs build" }
-serve-docs = { cmd = "mkdocs serve" }
-deploy-docs = { cmd = "mkdocs gh-deploy" }
 
 [tool.pytest.ini_options]
 addopts = "-s"

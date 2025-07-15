@@ -36,7 +36,7 @@ dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
 
 ## Tested configurations
 
-The following setup is known to work with Home Assistant.
+The following MPRIS players are known to work with Home Assistant.
 
 | Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
@@ -45,8 +45,9 @@ The following setup is known to work with Home Assistant.
 | `Chromium`   | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✔️ | Images not working when Chromium is running as snap |
 | `Kodi`       | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Requires Kodi plugin [MediaPlayerRemoteInterface](https://github.com/wastis/MediaPlayerRemoteInterface) |
 
+!!! note
 
-More players that support MPRIS can be found here: <https://wiki.archlinux.org/title/MPRIS>
+    More players that support MPRIS (but have not been tested) can be found here: <https://wiki.archlinux.org/title/MPRIS>
 
 ## Player commands
 
@@ -56,16 +57,16 @@ Dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/
 
 | Method<br />Property | Description                       | Example MQTT JSON Payload                           |
 |---------------|------------------------------------------|------------------------------------------------|
-| `Play`        | Starts playback                          | `{ "method": "Play" }`                         |
-| `Pause`       | Pauses playback                          | `{ "method": "Pause" }`                        |
-| `PlayPause`   | Toggles between play and pause           | `{ "method": "PlayPause" }`                    |
-| `Next`        | Next                                     | `{ "method": "Next" }`                         |
-| `Previous`    | Previous                                 | `{ "method": "Previous" }`                     |
-| `Stop`        | Stops playback                           | `{ "method": "Stop" }`                         |
-| `Seek`        | Seek forward or backward in micro seconds  | `{ "method": "Seek", "args": [60000000] }`   |
-| `Volume`      | Set volume (double between 0 and 1)      | `{ "property": "Volume", "value": 1.0 }`        |
-| `SetPosition` | Set / seek to position in micro seconds. First arguments needs to be trackid which can be determined via Metadata.mpris:trackid | `{ "method": "SetPosition", "args": ["/org/mpris/MediaPlayer2/firefox", 170692139] }`                         |
-| `Quit`        | Quits the media player                   | `{ "method": "Quit" }`                         |
+| `Play`        | Starts playback                          | `#!json { "method": "Play" }`                         |
+| `Pause`       | Pauses playback                          | `#!json { "method": "Pause" }`                        |
+| `PlayPause`   | Toggles between play and pause           | `#!json { "method": "PlayPause" }`                    |
+| `Stop`        | Stops playback                           | `#!json { "method": "Stop" }`                         |
+| `Next`        | Next                                     | `#!json { "method": "Next" }`                         |
+| `Previous`    | Previous                                 | `#!json { "method": "Previous" }`                     |
+| `Seek`        | Seek forward or backward in micro seconds  | `#!json { "method": "Seek", "args": [60000000] }`   |
+| `Volume`      | Set volume (double between 0 and 1)      | `#!json { "property": "Volume", "value": 1.0 }`        |
+| `SetPosition` | Set / seek to position in micro seconds. First arguments needs to be trackid which can be determined via Metadata.mpris:trackid | `#!json { "method": "SetPosition", "args": ["/org/mpris/MediaPlayer2/firefox", 170692139] }`                         |
+| `Quit`        | Quits the media player                   | `#!json { "method": "Quit" }`                         |
 
 For an overview of MPRIS commands have a look at <https://mpris2.readthedocs.io/en/latest/interfaces.html#mpris2.MediaPlayer2>
 
@@ -76,7 +77,7 @@ The configuration shown below creates a few components in Home Assistant
 * Media Player
 * MQTT sensor listening on topic `dbus2mqtt/org.mpris.MediaPlayer2/state`
 
-```yaml
+```yaml+jinja
 mqtt:
   sensor:
     - name: MPRIS Media Player
@@ -144,32 +145,38 @@ media_player:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Quit"}'
+            payload: >
+              {"method": "Quit"}
         play:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Play"}'
+            payload: >
+              {"method": "Play"}
         pause:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Pause"}'
+            payload: >
+              {"method": "Pause"}
         stop:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Stop"}'
+            payload: >
+              {"method": "Stop"}
         next:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Next"}'
+            payload: >
+              {"method": "Next"}
         previous:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"method": "Previous"}'
+            payload: >
+              {"method": "Previous"}
         seek:
           service: mqtt.publish
           data:
@@ -180,7 +187,8 @@ media_player:
           service: mqtt.publish
           data:
             topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-            payload: '{"property": "Volume", "value": {{volume}} }'
+            payload: >
+              {"property": "Volume", "value": {{volume}} }
         volume_up:
           service: mqtt.publish
           data:

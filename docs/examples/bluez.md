@@ -33,12 +33,12 @@ Dbus methods can be invoked by sendig the JSON payload to MQTT topic `dbus2mqtt/
 
 | Method<br />Property  | Description                          | Example MQTT JSON Payload                          |
 |-----------------------|--------------------------------------|-------------------------------------------------|
-| `StartDiscovery`      | Starts bluetooth discovery           | `{ "method": "StartDiscovery" }`                |
-| `StopDiscovery`       | Stops bluetooth discovery            | `{ "method": "StopDiscovery" }`                         |
-| `Connect`              |                                      | `{ "method": "Connect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
-| `Disconnect`           |                                      | `{ "method": "Disconnect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
-| `Pair`                 |                                      | `{ "method": "Pair", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
-| `CancelPairing`        |                                      | `{ "method": "CancelPairing", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
+| `StartDiscovery`      | Starts bluetooth discovery           | `#!json { "method": "StartDiscovery" }`                |
+| `StopDiscovery`       | Stops bluetooth discovery            | `#!json { "method": "StopDiscovery" }`                         |
+| `Connect`             |                                      | `#!json { "method": "Connect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
+| `Disconnect`          |                                      | `#!json { "method": "Disconnect", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
+| `Pair`                |                                      | `#!json { "method": "Pair", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                |
+| `CancelPairing`       |                                      | `#!json { "method": "CancelPairing", "path": "/org/bluez/hci0/dev_A1_A2_A3_A4_A5_A6" }`                         |
 
 ## References
 

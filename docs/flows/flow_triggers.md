@@ -3,8 +3,8 @@
 ## schedule
 
 ```yaml
-type: schedule
-interval: {seconds: 5}
+- type: schedule
+  interval: {seconds: 5}
 ```
 
 Schedule based triggers can be configured by setting either a cron or interval parameter. Scheduling is based on the   APScheduler library and allows the following configuration options
@@ -23,9 +23,9 @@ When triggered, the following context parameters are available
 ## dbus_signal
 
 ```yaml
-type: dbus_signal
-interface: org.freedesktop.DBus.Properties
-signal: PropertiesChanged
+- type: dbus_signal
+  interface: org.freedesktop.DBus.Properties
+  signal: PropertiesChanged
 ```
 
 DBus signals triggers must be configured with an anterface and path. Note that only subscribed signals can be configured as a trigger.
@@ -48,7 +48,7 @@ When triggered, the following context parameters are available
 ## object_added
 
 ```yaml
-type: object_added
+- type: object_added
 ```
 
 When triggered, the following context parameters are available
@@ -61,7 +61,7 @@ When triggered, the following context parameters are available
 ## object_removed
 
 ```yaml
-type: object_removed
+- type: object_removed
 ```
 
 When triggered, the following context parameters are available

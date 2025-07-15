@@ -3,23 +3,23 @@
 ## log
 
 ```yaml
-type: log
-msg: your log message
-levvel: INFO
+- type: log
+  msg: your log message
+  level: INFO
 ```
 
 | key              | type             | description  |
 |------------------|------------------|--------------|
 | msg              | str              | a templated string |
-| level            | str              | One of ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], defaults to 'INFO' |
+| level            | str              | One of `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL` |
 
 ## context_set
 
 ```yaml
-type: context_set
-context: {}
-dbus_object_context: {}
-global_context: {}
+- type: context_set
+  context: {}
+  dbus_object_context: {}
+  global_context: {}
 ```
 
 | key                 | type             | description  |
@@ -31,14 +31,14 @@ global_context: {}
 ## mqtt_publish
 
 ```yaml
-type: mqtt_publish
-topic: dbus2mqtt/org.mpris.MediaPlayer2/state
-payload_type: json
-payload_template: {PlaybackStatus: "Off"}
+- type: mqtt_publish
+  topic: dbus2mqtt/org.mpris.MediaPlayer2/state
+  payload_type: json
+  payload_template: {PlaybackStatus: "Off"}
 ```
 
 | key              | type             | description  |
 |------------------|------------------|--------------|
 | topic            | string | mqtt topic the messaage is published to |
-| payload_type     | string | any of [json, yaml, text], defaults to json, format the message is published in to mqtt |
+| payload_type     | string | Message format for MQTT: `json` (default), `yaml`, or `text` |
 | payload_template | string, dict | value can be a string, a dict of strings, a templated string or a nested dict of templated strings |
