@@ -87,9 +87,9 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/jwnmulder
     - icon: fontawesome/brands/docker
-      link: https://hub.docker.com/r/jwnmulder/dbus2mqtt/
+      link: https://hub.docker.com/r/jwnmulder/dbus2mqtt
     - icon: fontawesome/brands/python
-      link: https://pypi.org/project/dbus2mqtt/
+      link: https://pypi.org/project/dbus2mqtt
 
 # https://facelessuser.github.io/pymdown-extensions
 markdown_extensions:
