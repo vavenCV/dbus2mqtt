@@ -4,6 +4,10 @@
 
   "labels": ["dependencies"],
 
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+
   "packageRules": [
     {
       "matchFileNames": [".pre-commit-config.yaml"],
