@@ -2,7 +2,6 @@ site_name: dbus2mqtt
 site_description: General purpose DBus to MQTT bridge
 site_url: https://jwnmulder.github.io/dbus2mqtt
 site_author: Jan-Willem Mulder
-copyright: Copyright © Jan-Willem Mulder 2025
 repo_name: jwnmulder/dbus2mqtt
 repo_url: https://github.com/jwnmulder/dbus2mqtt
 edit_uri: edit/main/docs/
@@ -12,6 +11,7 @@ strict: true
 # https://github.com/mkdocstrings/mkdocstrings/blob/main/mkdocs.yml
 # https://github.com/twpayne/chezmoi/blob/master/assets/chezmoi.io/mkdocs.yml
 # https://github.com/facelessuser/pymdown-extensions/blob/main/mkdocs.yml
+# https://github.com/renovatebot/renovate/blob/main/tools/mkdocs/mkdocs.yml
 
 validation:
   omitted_files: warn
@@ -25,28 +25,25 @@ theme:
   features:
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation
     - navigation.indexes
-    - navigation.tabs
+    # - navigation.tabs
     # - navigation.tabs.sticky
 
-    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/
-    # - content.action.edit
+    # Use instant loading for internal links
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
+    - navigation.instant
 
-    # others
-    # - navigation.expand
-    # - navigation.sections
-    # - navigation.top
-    # - content.tabs.link
-    # - navigation.tracking
-    # - announce.dismiss
-    # - navigation.tabs
-    # - navigation.instant
-    # - toc.follow
-    # - content.tabs.link
-    # - search.share
-    # - search.highlight
-    # - search.suggest
-    # - content.code.copy
-    # - content.code.annotations
+    # Enable copy-to-clipboard button
+    # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-copy-button
+    - content.code.copy
+
+
+    # Enable edit source button.
+    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
+    - content.action.edit
+
+    # Enable navigation footer (next/previous buttons at the bottom of the page).
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#navigation
+    - navigation.footer
 
 # nav from https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/?h=navigation#navigation-tabs-with-tabs
 # Home
