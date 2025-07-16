@@ -19,18 +19,16 @@ validation:
   unrecognized_links: warn
   anchors: warn
 
+watch:
+  - README.md
+
 theme:
   name: material
   language: en
   features:
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation
-    - navigation.indexes
-    # - navigation.tabs
-    # - navigation.tabs.sticky
 
-    # Use instant loading for internal links
-    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
-    - navigation.instant
+    # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
+    - content.code.annotate
 
     # Enable copy-to-clipboard button
     # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-copy-button
@@ -39,6 +37,15 @@ theme:
     # # Enable edit source button.
     # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
     # - content.action.edit
+
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation
+    - navigation.indexes
+    # - navigation.tabs
+    # - navigation.tabs.sticky
+
+    # Use instant loading for internal links
+    # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#instant-loading
+    - navigation.instant
 
     # Enable navigation footer (next/previous buttons at the bottom of the page).
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#navigation
@@ -116,8 +123,6 @@ extra:
 # https://facelessuser.github.io/pymdown-extensions
 markdown_extensions:
 
-  - attr_list
-
   # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
   - admonition
 
@@ -129,13 +134,9 @@ markdown_extensions:
   - pymdownx.superfences
 
   - pymdownx.snippets:
-      base_path:
-        - .
-        - docs
       check_paths: true
-
 
 plugins:
   - open-in-new-tab:
       add_icon: true
-#   - git-revision-date-localized
+#   - git-revision-date-localized: {}

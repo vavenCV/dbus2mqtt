@@ -5,7 +5,7 @@ It lets you forward Linux D-Bus signals and properties to MQTT topics, call D-Bu
 
 This makes it easy to integrate Linux desktop services or system signals into MQTT-based workflows - including **Home Assistant**.
 
-## ✨ Features
+## Features
 
 * 🔗 Forward **D-Bus signals** to MQTT topics.
 * 🧠 Enrich or transform **MQTT payloads** using Jinja2 templates and additional D-Bus calls.
@@ -17,7 +17,7 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 
 **dbus2mqtt** is considered stable for the use-cases it has been tested against, and is actively being developed. Documentation is continuously being improved.
 
-Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found here: [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player/index.md)
+Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found here: [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player)
 
 ## Getting started with dbus2mqtt
 
