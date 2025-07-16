@@ -36,13 +36,35 @@ theme:
     # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-copy-button
     - content.code.copy
 
-    # Enable edit source button.
-    # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
-    - content.action.edit
+    # # Enable edit source button.
+    # # https://squidfunk.github.io/mkdocs-material/setup/adding-a-git-repository/#code-actions
+    # - content.action.edit
 
     # Enable navigation footer (next/previous buttons at the bottom of the page).
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#navigation
     - navigation.footer
+
+  palette:
+
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
 
 # nav from https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/?h=navigation#navigation-tabs-with-tabs
 # Home
@@ -94,6 +116,8 @@ extra:
 # https://facelessuser.github.io/pymdown-extensions
 markdown_extensions:
 
+  - attr_list
+
   # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
   - admonition
 
@@ -109,3 +133,9 @@ markdown_extensions:
         - .
         - docs
       check_paths: true
+
+
+plugins:
+  - open-in-new-tab:
+      add_icon: true
+#   - git-revision-date-localized
