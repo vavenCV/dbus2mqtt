@@ -135,6 +135,9 @@ markdown_extensions:
   - pymdownx.snippets:
       check_paths: true
 
+hooks:
+  - docs/hooks.py
+
 plugins:
   - open-in-new-tab:
       add_icon: true
