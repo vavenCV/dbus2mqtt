@@ -76,10 +76,8 @@ Issues = "https://github.com/jwnmulder/dbus2mqtt/issues"
 [project.scripts]
 dbus2mqtt = "dbus2mqtt.main:main"
 
-[tool.deptry]
-ignore = ["DEP003"]
-
 [tool.deptry.per_rule_ignores]
+DEP003 = ["dbus2mqtt"]
 DEP004 = ["mkdocs"]
 
 [tool.taskipy.tasks]
