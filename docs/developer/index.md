@@ -55,5 +55,3 @@ gdbus call --session \
   '[]' \
   '{}' \
   5000
-
-
