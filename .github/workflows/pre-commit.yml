@@ -17,8 +17,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-        with:
-          activate-environment: true
-          enable-cache: true
+
+      - name: Uv sync
+        run: uv sync --all-packages
 
       - uses: pre-commit/action@v3.0.1
