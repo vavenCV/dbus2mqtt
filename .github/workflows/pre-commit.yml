@@ -20,7 +20,7 @@ jobs:
         with:
           activate-environment: true
 
-      # - name: Uv sync
-      #   run: uv sync --all-packages
+      - name: Uv sync
+        run: uv sync
 
       - uses: pre-commit/action@v3.0.1
