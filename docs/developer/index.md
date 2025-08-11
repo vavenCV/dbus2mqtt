@@ -28,7 +28,7 @@ mqtt() {
 
 mqtt --help
 mqtt subscribe --topic 'dbus2mqtt/#'
-mqtt publish -t dbus2mqtt/Notifications/command -m '{ "method": "Notify", "args": ["App Name", 0, "icon name", "summary", "body message", [], {}, 5000] }'
+mqtt publish -t dbus2mqtt/Notifications/command -m '{ "method": "Notify", "args": ["dbus2mqtt", 0, "dialog-information", "dbus2mqtt", "Message from <b><i>dbus2mqtt</i></b>", [], {}, 5000] }'
 ```
 
 ```xml
