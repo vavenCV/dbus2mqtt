@@ -49,7 +49,7 @@ dbus:
             - method: GetServerInformation
 
       flows:
-        - name: "signal recieved"
+        - name: "signal received"
           triggers:
             - type: dbus_signal
               interface: org.freedesktop.Notifications
