@@ -95,7 +95,7 @@ media_player:
   - platform: media_player_template
     media_players:
       mpris_media_player:
-        device_class: generic
+        device_class: receiver
         friendly_name: MPRIS Media Player
         value_template: "{{ states('sensor.mpris_media_player') }}"
 
