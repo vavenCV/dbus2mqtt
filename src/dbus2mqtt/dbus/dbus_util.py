@@ -28,33 +28,6 @@ def unwrap_dbus_objects(args):
 def camel_to_snake(name):
     return re.sub(r'([a-z])([A-Z])', r'\1_\2', name).lower()
 
-def convert_mqtt_args_to_dbus(args: List[Any]) -> List[Any]:
-    """
-    Convert MQTT/JSON arguments to D-Bus compatible arguments.
-    
-    Args:
-        args: List of arguments from MQTT (typically JSON deserialized objects)
-        
-    Returns:
-        List of D-Bus compatible arguments
-        
-    Example:
-        # For ConnMan SetProperty with nested dict:
-        mqtt_args = [{"Ethernet": {"Method": "auto", "Interface": "end1", "Address": "3E:67:8C:CE:CF:86", "MTU": 2000}}]
-        dbus_args = convert_mqtt_args_to_dbus(mqtt_args)
-    """
-    converted_args = []
-    
-    for arg in args:
-        converted_arg = _convert_value_to_dbus(arg)
-        # If the converted argument is a dict, it needs to be wrapped in a Variant for D-Bus
-        if isinstance(converted_arg, dict):
-            signature = _get_dbus_signature(converted_arg)
-            converted_arg = Variant(signature, converted_arg)
-        converted_args.append(converted_arg)
-    
-    return converted_args
-
 def _convert_value_to_dbus(value: Any) -> Any:
     """
     Recursively convert a single value to D-Bus compatible type.
@@ -160,28 +133,10 @@ def _get_dbus_signature(value: Any) -> str:
     else:
         return 's'  # fallback to string
 
-# Helper function specifically for ConnMan-style property setting
-def convert_connman_property_args(property_value: Any) -> Any:
-    """
-    Helper function specifically for ConnMan SetProperty calls.
-    
-    ConnMan SetProperty expects: SetProperty(variant property_value)
-    
-    Args:
-        property_value: Value to set (will be converted and wrapped in Variant)
-        
-    Returns:
-        List with Variant(converted_value)
-    """
-    converted_value = _convert_value_to_dbus(property_value)
-    signature = _get_dbus_signature(converted_value)
-    return Variant(signature, converted_value)
-
-# Alternative conversion that wraps all complex types in Variants
-def convert_mqtt_args_to_dbus_explicit_variants(args: List[Any]) -> List[Any]:
+# Wraps all complex types in Variants
+def convert_mqtt_args_to_dbus(args: List[Any]) -> List[Any]:
     """
     Convert MQTT/JSON arguments to D-Bus with explicit Variant wrapping for all complex types.
-    This version is more aggressive about wrapping things in Variants.
     
     Args:
         args: List of arguments from MQTT
