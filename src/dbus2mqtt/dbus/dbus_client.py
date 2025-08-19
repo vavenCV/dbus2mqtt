@@ -32,6 +32,7 @@ from dbus2mqtt.dbus.introspection_patches.mpris_playerctl import (
 from dbus2mqtt.dbus.introspection_patches.mpris_vlc import mpris_introspection_vlc
 from dbus2mqtt.event_broker import MqttMessage
 from dbus2mqtt.flow.flow_processor import FlowScheduler, FlowTriggerMessage
+from dbus2mqtt.event_broker import MqttMessage
 
 logger = logging.getLogger(__name__)
 
@@ -868,7 +869,6 @@ class DbusClient:
                 "bus_name": bus_name,
                 "path": path,
                 "interface": interface_config.interface,
-                
                 "timestamp": datetime.now().isoformat()
             }
 
@@ -878,7 +878,7 @@ class DbusClient:
                 args = kwargs['args']
                 response_context.update({
                     "method": method,
-                    "method_args": args,
+                    "args": args,
                 })
             # Check if 'property' and 'value' are provided
             elif 'property' in kwargs and 'value' in kwargs:
@@ -911,7 +911,6 @@ class DbusClient:
             
             if response_topic:
                 # Send response via MQTT
-                from dbus2mqtt.event_broker import MqttMessage
                 response_msg = MqttMessage(
                     topic=response_topic,
                     payload=response_context,

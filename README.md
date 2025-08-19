@@ -130,6 +130,8 @@ mqtt:
 
 ### Exposing dbus methods
 
+#### Commands
+
 ```yaml
 dbus:
   subscriptions:
@@ -138,6 +140,7 @@ dbus:
       interfaces:
         - interface: org.mpris.MediaPlayer2.Player
           mqtt_command_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
+          mqtt_response_topic: dbus2mqtt/org.mpris.MediaPlayer2/response/{{ method }}
           methods:
             - method: Pause
             - method: Play
@@ -169,6 +172,10 @@ To specifically target objects the properties `bus_name` and/or `path` can be us
     "path": "/org/mpris/MediaPlayer2"
 }
 ```
+
+#### Responses
+
+D-BUS responses to thoses command will be published on a configureable mqtt topic using `mqtt_response_topic`.
 
 ### Exposing dbus signals
 
