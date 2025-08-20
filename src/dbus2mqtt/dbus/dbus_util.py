@@ -1,11 +1,12 @@
 import base64
-import re
 import logging
+import re
 
-from typing import Any, Dict, List, Union
+from typing import Any
+
+import dbus_fast.signature as dbus_signature
 
 from dbus_fast import Variant
-import dbus_fast.signature as dbus_signature
 
 logger = logging.getLogger(__name__)
 
@@ -31,16 +32,16 @@ def camel_to_snake(name):
 def _convert_value_to_dbus(value: Any) -> Any:
     """
     Recursively convert a single value to D-Bus compatible type.
-    
+
     Args:
         value: The value to convert (can be dict, list, primitive, etc.)
-        
+
     Returns:
         D-Bus compatible value
     """
     if value is None:
         return value
-    
+
     elif isinstance(value, dict):
         # Convert dict to D-Bus dictionary (a{sv} - dictionary of string to variant)
         dbus_dict = {}
@@ -53,30 +54,30 @@ def _convert_value_to_dbus(value: Any) -> Any:
             signature = _get_dbus_signature(converted_value)
             dbus_dict[key] = Variant(signature, converted_value)
         return dbus_dict
-    
+
     elif isinstance(value, list):
         # Convert list to D-Bus array
         converted_list = []
         for item in value:
             converted_list.append(_convert_value_to_dbus(item))
         return converted_list
-    
+
     elif isinstance(value, bool):
         # Boolean values are fine as-is for D-Bus
         return value
-    
+
     elif isinstance(value, int):
         # Integer values are fine as-is for D-Bus
         return value
-    
+
     elif isinstance(value, float):
         # Float values are fine as-is for D-Bus
         return value
-    
+
     elif isinstance(value, str):
         # String values are fine as-is for D-Bus
         return value
-    
+
     else:
         # For any other type, try to convert to string as fallback
         logger.warning(f"Unknown type {type(value)} for D-Bus conversion, converting to string: {value}")
@@ -85,36 +86,36 @@ def _convert_value_to_dbus(value: Any) -> Any:
 def _get_dbus_signature(value: Any) -> str:
     """
     Get the appropriate D-Bus signature for a value.
-    
+
     Args:
         value: The value to get signature for
-        
+
     Returns:
         D-Bus type signature string
     """
     if isinstance(value, bool):
         return 'b'  # boolean
     elif isinstance(value, int):
-        UINT16_MIN = 0
-        UINT16_MAX = 0xFFFF
-        INT16_MIN = -0x7FFF - 1
-        INT16_MAX = 0x7FFF
-        UINT32_MIN = 0
-        UINT32_MAX = 0xFFFFFFFF
-        INT32_MIN = -0x7FFFFFFF - 1
-        INT32_MAX = 0x7FFFFFFF
-        UINT64_MIN = 0
-        UINT64_MAX = 18446744073709551615
+        uint16_min = 0
+        uint16_max = 0xFFFF
+        int16_min = -0x7FFF - 1
+        int16_max = 0x7FFF
+        uint32_min = 0
+        uint32_max = 0xFFFFFFFF
+        int32_min = -0x7FFFFFFF - 1
+        int32_max = 0x7FFFFFFF
+        uint64_min = 0
+        uint64_max = 18446744073709551615
 
-        if UINT16_MIN <= value <= UINT16_MAX:
+        if uint16_min <= value <= uint16_max:
             return 'q'  # 16-bit unsigned int
-        elif INT16_MIN <= value <= INT16_MAX:
+        elif int16_min <= value <= int16_max:
             return 'n'  # 16-bit signed int
-        elif UINT32_MIN <= value <= UINT32_MAX:
+        elif uint32_min <= value <= uint32_max:
             return 'u'  # 32-bit unsigned int
-        elif INT32_MIN <= value <= INT32_MAX:
+        elif int32_min <= value <= int32_max:
             return 'i'  # 32-bit signed integer
-        elif UINT64_MIN <= value <= UINT64_MAX:
+        elif uint64_min <= value <= uint64_max:
             return 't'  # 64-bit unsigned integer
         else:
             return 'x'  # 64-bit signed integer
@@ -133,23 +134,23 @@ def _get_dbus_signature(value: Any) -> str:
     else:
         return 's'  # fallback to string
 
-# Wraps all complex types in Variants
-def convert_mqtt_args_to_dbus(args: List[Any]) -> List[Any]:
+# Wraps all complex types in VariantList
+def convert_mqtt_args_to_dbus(args: list[Any]) -> list[Any]:
     """
     Convert MQTT/JSON arguments to D-Bus with explicit Variant wrapping for all complex types.
-    
+
     Args:
         args: List of arguments from MQTT
-        
+
     Returns:
         List of D-Bus compatible arguments with explicit Variants
     """
     converted_args = []
-    
+
     for arg in args:
         converted_arg = _convert_and_wrap_in_variant(arg)
         converted_args.append(converted_arg)
-    
+
     return converted_args
 
 def _convert_and_wrap_in_variant(value: Any) -> Any:
@@ -158,7 +159,7 @@ def _convert_and_wrap_in_variant(value: Any) -> Any:
     """
     if value is None:
         return value
-    elif isinstance(value, (bool, int, float, str)):
+    elif isinstance(value, bool | int | float | str):
         # Primitive types can be used as-is or wrapped in Variant if needed
         return value
     elif isinstance(value, dict):

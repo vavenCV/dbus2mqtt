@@ -107,11 +107,11 @@ dbus:
 
     - bus_name: net.connman
       path: /net/connman/service/*
-      interfaces:  
-        - interface: net.connman.Service  
+      interfaces:
+        - interface: net.connman.Service
           mqtt_command_topic: internal/hardware/net/service/command
-          mqtt_response_topic: internal/hardware/net/service/response/{{ method }} 
-          methods:  
+          mqtt_response_topic: internal/hardware/net/service/response/{{ method }}
+          methods:
             - method: GetProperties
             - method: SetProperty
             - method: Connect
@@ -120,8 +120,8 @@ dbus:
           properties:
             - property: State
             - property: Ethernet
-          signals:  
-            - signal: PropertyChanged 
+          signals:
+            - signal: PropertyChanged
       flows:
         - name: "Service Property Changed"
           triggers:
@@ -140,23 +140,23 @@ dbus:
 
     - bus_name: net.connman
       path: /net/connman/technology/*
-      interfaces:  
-        - interface: net.connman.Technology  
+      interfaces:
+        - interface: net.connman.Technology
           mqtt_command_topic: internal/hardware/net/technology/command
           mqtt_response_topic: internal/hardware/net/technology/response/{{ method }}
-          methods:  
+          methods:
             - method: GetProperties
             - method: SetProperty
             - method: Scan
-          signals:  
-            - signal: PropertyChanged 
+          signals:
+            - signal: PropertyChanged
       flows:
         - name: "Technology Property Changed"
           triggers:
             - type: dbus_signal
               bus_name: net.connman
               interface: net.connman.Technology
-              path: /net/connman/technology/* 
+              path: /net/connman/technology/*
               signal: PropertyChanged
           actions:
             - type: mqtt_publish
@@ -174,14 +174,13 @@ dbus:
 
     - bus_name: net.connman
       path: /net/connman/agent/*
-      interfaces:  
-        - interface: net.connman.Agent  
+      interfaces:
+        - interface: net.connman.Agent
           mqtt_command_topic: internal/hardware/net/agent/command
           mqtt_response_topic: internal/hardware/net/agent/response/{{ method }}
-          methods:  
-            - method: Release  
-            - method: Cancel  
-            - method: RequestBrowser  
-            - method: ReportError  
-            - method: RequestInput  
-      
+          methods:
+            - method: Release
+            - method: Cancel
+            - method: RequestBrowser
+            - method: ReportError
+            - method: RequestInput

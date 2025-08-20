@@ -20,4 +20,3 @@ uv run dbus2mqtt --config docs/examples/connman-config.yaml
 ## Features
 
 This configuration is a passthrough of the D-BUS architecture of connman. refer to connman D-BUS API.
-

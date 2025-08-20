@@ -175,7 +175,7 @@ To specifically target objects the properties `bus_name` and/or `path` can be us
 
 #### Responses
 
-D-BUS responses to thoses command will be published on a configureable mqtt topic using `mqtt_response_topic`.
+D-BUS responses to those command will be published on a configurable mqtt topic using `mqtt_response_topic`.
 
 ### Exposing dbus signals
 
