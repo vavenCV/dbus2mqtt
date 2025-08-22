@@ -641,8 +641,8 @@ class DbusClient:
         call_method_name = "call_" + camel_to_snake(method)
         try:
             res = await interface.__getattribute__(call_method_name)(*converted_args)
-        except dbus_errors.DBusError as e:
-            logger.warning(f"Error while calling dbus object, bus_name={interface.bus_name}, interface={interface.introspection.name}, method={method}")
+        except Exception as e:
+            logger.debug(f"Error while calling dbus object, bus_name={interface.bus_name}, interface={interface.introspection.name}, method={method}, converted_args={converted_args}", exc_info=True)
             raise e
 
         if res:

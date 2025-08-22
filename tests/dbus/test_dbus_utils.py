@@ -153,6 +153,52 @@ class TestConvertMqttArgsToDbus:
         assert len(result) == 1
         assert result[0] == []
 
+    def test_desktop_notification_structure(self):
+        """Test conversion of desktop notification payload.
+
+            Reference PR: https://github.com/jwnmulder/dbus2mqtt/pull/126
+
+            - bus_name=org.freedesktop.Notifications
+            - interface=org.freedesktop.Notifications
+            - method=Notify
+            - signature:
+            .. code-block:: xml
+                <arg type="s" name="app_name" direction="in"/>
+                <arg type="u" name="replaces_id" direction="in"/>
+                <arg type="s" name="app_icon" direction="in"/>
+                <arg type="s" name="summary" direction="in"/>
+                <arg type="s" name="body" direction="in"/>
+                <arg type="as" name="actions" direction="in"/>
+                <arg type="a{sv}" name="hints" direction="in"/>
+                <arg type="i" name="expire_timeout" direction="in"/>
+                <arg type="u" name="id" direction="out"/>
+        """
+
+        args=[
+            "dbus2mqtt",
+            0,
+            "dialog-information",
+            "dbus2mqtt",
+            "Message from <b><i>dbus2mqtt</i></b>",
+            [],
+            { "urgency": 1, "category": "device" },
+            5000
+        ]
+        converted_args = convert_mqtt_args_to_dbus(args)
+
+        assert converted_args[0] == "dbus2mqtt"  # app_name
+        assert converted_args[1] == 0  # replaces_id
+        assert converted_args[2] == "dialog-information"  # app_icon
+        assert converted_args[3] == "dbus2mqtt"  # summary
+        assert converted_args[4] == "Message from <b><i>dbus2mqtt</i></b>"  # body
+        assert converted_args[5] == []  # actions
+        assert converted_args[6] == {
+            "urgency": Variant("q", 1),
+            "category": Variant("s", "device")
+        }  # hints
+        assert converted_args[7] == 5000  # expire_timeout
+
+
 class TestConvertAndWrapInVariant:
     """Test suite for _convert_and_wrap_in_variant helper function"""
 
