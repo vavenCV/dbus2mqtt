@@ -38,8 +38,8 @@ Trigger a desktop notification by sending the following example payload to `dbus
     "dialog-information",
     "dbus2mqtt",
     "Message from <b><i>dbus2mqtt</i></b>",
-    [],
-    {},
+    ["ok", "OK", "cancel", "Cancel"],
+    { "urgency": 1, "category": "device" },
     5000
   ]
 }
