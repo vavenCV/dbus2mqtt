@@ -200,15 +200,6 @@ class TestConvertAndWrapInVariant:
             assert isinstance(item, Variant)
             assert item.signature == 'a{sv}'
 
-    def test_unknown_type_string_conversion(self):
-        """Test unknown type gets converted to string"""
-        class CustomType:
-            def __str__(self):
-                return "custom_value"
-
-        result = _convert_and_wrap_in_variant(CustomType())
-        assert result == "custom_value"
-
 
 class TestIntegrationScenarios:
     """Integration tests for real-world usage scenarios"""

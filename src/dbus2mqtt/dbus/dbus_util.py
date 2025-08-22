@@ -179,4 +179,4 @@ def _convert_and_wrap_in_variant(value: Any) -> Any:
         return converted_list
     else:
         # Fallback
-        return str(value)
+        return value
