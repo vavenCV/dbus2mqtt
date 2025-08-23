@@ -175,7 +175,7 @@ To specifically target objects the properties `bus_name` and/or `path` can be us
 
 #### Responses
 
-D-BUS responses to those command will be published on a configurable mqtt topic using `mqtt_response_topic`.
+D-BUS responses to those command will be published on a configurable mqtt topic using `mqtt_response_topic`. One response per dbus-object is published to that topic. In other words, if there a three DBus-objects that are targeted by the `Play` command, three MQTT response messages are published.
 
 ### Exposing dbus signals
 
