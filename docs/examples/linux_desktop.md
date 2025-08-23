@@ -47,7 +47,7 @@ Simple notification with no timeout
 }
 ```
 
-Notification with actions and hints that automatically dissapears after 5 seconds
+Notification with actions and hints that automatically disappears after 5 seconds
 
 ```json
 {
@@ -71,6 +71,9 @@ Further references:
 * <https://specifications.freedesktop.org/icon-naming-spec/latest/>
 
 ## Gnome SessionManager
+
+!! note
+    work in progress
 
 The following table lists the supported commands, their descriptions, and an example JSON payload for invoking them via MQTT.
 
