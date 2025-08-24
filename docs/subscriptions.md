@@ -92,7 +92,7 @@ Properties can be updated by publishing a specific JSON message to the `dbus2mqt
 | key          | type   | description    |
 |--------------|--------|----------------|
 | property     | str    | Property name  |
-| value        | list   | Property value |
+| value        | any    | Property value |
 | bus_name     | str    | Only invoke on dbus objects where bus_name matches, defaults to `*`  |
 | path         | str    | Only invoke on dbus objects where path matches, defaults to `*`      |
 
