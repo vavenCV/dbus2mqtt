@@ -119,6 +119,9 @@ extra:
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/dbus2mqtt
 
+extra_css:
+  - stylesheets/extra.css
+
 # https://facelessuser.github.io/pymdown-extensions
 markdown_extensions:
 
