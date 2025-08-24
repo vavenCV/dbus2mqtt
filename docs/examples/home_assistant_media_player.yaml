@@ -7,8 +7,6 @@ dbus:
 
       interfaces:
         - interface: org.freedesktop.DBus.Properties
-          mqtt_command_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-          mqtt_response_topic: dbus2mqtt/org.mpris.MediaPlayer2/response
           signals:
             - signal: PropertiesChanged
               filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
@@ -17,13 +15,11 @@ dbus:
 
         - interface: org.mpris.MediaPlayer2
           mqtt_command_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-          mqtt_response_topic: dbus2mqtt/org.mpris.MediaPlayer2/response
           methods:
             - method: Quit
 
         - interface: org.mpris.MediaPlayer2.Player
           mqtt_command_topic: dbus2mqtt/org.mpris.MediaPlayer2/command
-          mqtt_response_topic: dbus2mqtt/org.mpris.MediaPlayer2/response
           signals:
             - signal: Seeked
           methods:
