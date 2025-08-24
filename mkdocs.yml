@@ -72,22 +72,8 @@ theme:
         icon: material/brightness-4
         name: Switch to system preference
 
-# nav from https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/?h=navigation#navigation-tabs-with-tabs
-# Home
-# Getting started
-# Setup
-# Reference
-## CLI
-## Configuration files
 # Changelog
 
-# nav from chezmoi
-# Home
-# User guide
-# Reference
-# Developer guide
-# Links
-# License
 
 not_in_nav: |
   examples/dbus2mqtt_internal_state.md
@@ -95,13 +81,12 @@ not_in_nav: |
 
 nav:
   - Home: index.md
-  # - User guide:
-  # - installation - docker
+  - Setup: setup.md
+  - Subscriptions: subscriptions.md
   - Flows:
       - flows/index.md
       - flows/flow_triggers.md
       - flows/flow_actions.md
-  # - References:
   - Examples:
       - examples/index.md
       - examples/home_assistant_media_player.md
