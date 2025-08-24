@@ -67,7 +67,7 @@ python -m pip install dbus2mqtt
 dbus2mqtt --config config.yaml
 ```
 
-See [Setup](https://jwnmulder.github.io/dbus2mqtt/setup.html) for more installation options and configuration details.
+See [setup](https://jwnmulder.github.io/dbus2mqtt/setup.html) for more installation options and configuration details.
 
 ## Examples
 
