@@ -74,7 +74,7 @@ Example 1, calling `Play` on all registered MPRIS players
 }
 ```
 
-Example 2, invoking `Seek` with arguments and targetting only the VLC MPRIS player
+Example 2, invoking `Seek` with arguments and targeting only the VLC MPRIS player
 
 ```json
 {
@@ -113,7 +113,7 @@ If set, D-Bus responses to commands will be published the configured `mqtt_respo
 
 !!! note
     `dbus2mqtt` publishes one response per targeted dbus object.
-    When two dbus objects are targetted, two separate responses will be published.
+    When two dbus objects are targeted, two separate responses will be published.
 
 Example response for method calls
 
@@ -146,7 +146,7 @@ Example response for method calls
 }
 ```
 
-Example reponse for property updates
+Example response for property updates
 
 ```json
 {
