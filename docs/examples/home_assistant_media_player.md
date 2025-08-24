@@ -38,7 +38,7 @@ dbus2mqtt --config docs/examples/home_assistant_media_player.yaml
 
 The following MPRIS players are known to work with Home Assistant.
 
-| Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes
+| Application  | Play<br />Pause<br /> | Stop | Next<br />Previous | Seek<br />SetPosition | Volume | Quit | Media Info | Media Image | Notes |
 |--------------|-----------------------|------|--------------------|------|--------|------|------------|-------------|-------------------|
 | `Firefox`    | ✅ | ✅ | ✅ | ✅ |    | ❌ | ✅ | ✅ |  |
 | `VLC`        | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |    |  |
@@ -46,7 +46,6 @@ The following MPRIS players are known to work with Home Assistant.
 | `Kodi`       | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | Requires Kodi plugin [MediaPlayerRemoteInterface](https://github.com/wastis/MediaPlayerRemoteInterface) |
 
 !!! note
-
     More players that support MPRIS (but have not been tested) can be found here: <https://wiki.archlinux.org/title/MPRIS>
 
 ## Player commands
