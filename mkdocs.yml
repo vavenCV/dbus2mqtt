@@ -72,12 +72,10 @@ theme:
         icon: material/brightness-4
         name: Switch to system preference
 
-# Changelog
-
-
 not_in_nav: |
   examples/dbus2mqtt_internal_state.md
   examples/linux_desktop.md
+  examples/connman-config.md
 
 nav:
   - Home: index.md
@@ -87,6 +85,8 @@ nav:
       - flows/index.md
       - flows/flow_triggers.md
       - flows/flow_actions.md
+  - Templating:
+      - templating/index.md
   - Examples:
       - examples/index.md
       - examples/home_assistant_media_player.md

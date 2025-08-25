@@ -10,7 +10,7 @@
 
 | key              | type             | description  |
 |------------------|------------------|--------------|
-| msg              | str              | a templated string |
+| msg              | str              | A `string` or `templated string` |
 | level            | str              | One of `DEBUG`, `INFO` (default), `WARNING`, `ERROR`, `CRITICAL` |
 
 ## context_set
@@ -23,8 +23,8 @@
 
 | key                 | type             | description  |
 |---------------------|------------------|--------------|
-| context             | dict | Per flow execution context. Value can be a dict of strings or dict of templated strings |
-| global_context      | dict | Global context, shared between multiple flow executions, over all subscriptions. Value can be a dict of strings or dict of templated strings |
+| context             | dict | Per flow execution context. Value can be a `dict of strings` or `dict of templated strings` |
+| global_context      | dict | Global context, shared between multiple flow executions, over all subscriptions. Value can be a `dict of strings` or `dict of templated strings` |
 
 ## mqtt_publish
 
@@ -39,4 +39,4 @@
 |------------------|------------------|--------------|
 | topic            | string | mqtt topic the messaage is published to |
 | payload_type     | string | Message format for MQTT: `json` (default), `yaml`, or `text` |
-| payload_template | string, dict | value can be a string, a dict of strings, a templated string or a nested dict of templated strings |
+| payload_template | string, dict | value can be a `string`, a `dict of strings`, a `templated string` or a nested `dict of templated strings` |

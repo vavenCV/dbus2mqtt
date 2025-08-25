@@ -17,7 +17,7 @@ This makes it easy to integrate Linux desktop services or system signals into MQ
 
 **dbus2mqtt** is considered stable for the use-cases it has been tested against, and is actively being developed. Documentation is continuously being improved.
 
-Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found here: [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player.html)
+Initial testing has focused on MPRIS integration. A table of tested MPRIS players and their supported methods can be found on [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player.html)
 
 ## Getting started with dbus2mqtt
 
@@ -71,7 +71,7 @@ See [setup](https://jwnmulder.github.io/dbus2mqtt/setup.html) for more installat
 
 ## Examples
 
-More dbus2mqtt examples can be found here: [Examples](https://jwnmulder.github.io/dbus2mqtt/examples/index.html).
+More dbus2mqtt examples can be found in the [examples](https://jwnmulder.github.io/dbus2mqtt/examples/index.html) section.
 The most complete one being [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player.html)
 
 ## Exposing dbus methods, properties and signals
@@ -84,10 +84,8 @@ See [subscriptions](https://jwnmulder.github.io/dbus2mqtt/subscriptions.html) fo
 }
 ```
 
-## Flows
+## Flows and Jinja based templating
 
-A reference of all supported flow triggers and actions can be found on [flows](https://jwnmulder.github.io/dbus2mqtt/flows/)
+For more advanced use-cases, dbus2mqtt has support for flows and Jinja2 based templates. A reference of all supported flow triggers and actions can be found on [flows](https://jwnmulder.github.io/dbus2mqtt/flows/index.html)
 
-## Jinja templating
-
-TODO: Document Jinja templating, for now see the [Mediaplayer integration with Home Assistant](https://jwnmulder.github.io/dbus2mqtt/examples/home_assistant_media_player.html) example
+Jinja templating documentation can be found here: [templating](templating/index.md)

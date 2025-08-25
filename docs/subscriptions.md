@@ -19,8 +19,8 @@ For each subscription, you can configure the behavior of `dbus2mqtt` using any o
 | Field       | Description                    |
 |-------------|--------------------------------|
 | `interface`  | The D-Bus interface that defines the set of methods, signals, and properties available |
-| `mqtt_command_topic` | MQTT topic where `dbus2mqtt` listens for JSON commands. For example `dbus2mqtt/mpris/command` |
-| `mqtt_response_topic` | MQTT topic where `dbus2mqtt` published responses on. For example `dbus2mqtt/mpris/response` |
+| `mqtt_command_topic` | MQTT topic where `dbus2mqtt` listens for JSON commands. For example `dbus2mqtt/mpris/command`. Value can be a `string` or `templated string` |
+| `mqtt_response_topic` | MQTT topic where `dbus2mqtt` published responses on. For example `dbus2mqtt/mpris/response`. Value can be a `string` or `templated string` |
 | `methods` | List of methods to expose over MQTT |
 | `properties` | List of properties to expose over MQTT |
 | `signals` | List of D-Bus signals to subscribe to |
@@ -165,6 +165,13 @@ Example response for property updates
 
 Publishing signals to MQTT topics works by subscribing to the relevant signal and using flows for publishing.
 
+Signals configuration parameters
+
+| Field       | Description                    |
+|-------------|--------------------------------|
+| `signal`    | Name of the signal |
+| `filter`    | Templated string that should evaluate to a boolean result. `True` will accept signals, `False` will drop signals |
+
 In contrast to calling methods or setting properties, signals are not automatically published to MQTT topcis.
 To do so, configure a flow as shown below.
 
@@ -177,6 +184,7 @@ dbus:
         - interface: org.freedesktop.DBus.Properties
           signals:
             - signal: PropertiesChanged
+              filter: "{{ args[0] == 'org.mpris.MediaPlayer2.Player' }}"
 
       flows:
         - name: "Property Changed flow"
@@ -188,4 +196,4 @@ dbus:
               payload_type: json
 ```
 
-More information on flows can be found here: [flows](flows/index.md)
+More information on flows can be found in the [flows](flows/index.md) section.
