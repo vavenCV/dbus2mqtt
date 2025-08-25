@@ -91,6 +91,7 @@ nav:
       - examples/index.md
       - examples/home_assistant_media_player.md
       - examples/bluez.md
+      # - examples/connman-config.md
   - Developer guide:
       - developer/index.md
       - developer/debugging_dbus.md
