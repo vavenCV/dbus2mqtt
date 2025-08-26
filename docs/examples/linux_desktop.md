@@ -72,7 +72,7 @@ Further references:
 
 ## Gnome SessionManager
 
-!! note
+!!! note
     work in progress
 
 The following table lists the supported commands, their descriptions, and an example JSON payload for invoking them via MQTT.
