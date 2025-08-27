@@ -98,9 +98,9 @@ nav:
       - developer/debugging_dbus.md
 
 extra:
-  # analytics:
-  #   provider: google
-  #   property: G-XXXXXXXXXX
+  analytics:
+   provider: google
+   property: G-BRH1JXWE40
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jwnmulder
