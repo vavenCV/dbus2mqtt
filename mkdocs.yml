@@ -24,6 +24,7 @@ watch:
 theme:
   name: material
   language: en
+  custom_dir: docs/overrides
   features:
 
     # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
@@ -97,6 +98,9 @@ nav:
       - developer/debugging_dbus.md
 
 extra:
+  # analytics:
+  #   provider: google
+  #   property: G-XXXXXXXXXX
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jwnmulder
