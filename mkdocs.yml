@@ -99,8 +99,8 @@ nav:
 
 extra:
   analytics:
-   provider: google
-   property: G-BRH1JXWE40
+    provider: google
+    property: G-BRH1JXWE40
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jwnmulder
