@@ -49,7 +49,7 @@ theme:
 
     # Enable navigation footer (next/previous buttons at the bottom of the page).
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#navigation
-    - navigation.footer
+    # - navigation.footer
 
   palette:
 
