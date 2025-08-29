@@ -24,6 +24,7 @@ watch:
 theme:
   name: material
   language: en
+  logo: assets/logo-light.svg
   custom_dir: docs/overrides
   features:
 
