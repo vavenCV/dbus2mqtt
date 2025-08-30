@@ -12,3 +12,10 @@ Generic DBus specifications:
 ```bash
 uv run main.py --config config.yaml
 ```
+
+## Activate Python virtual env
+
+```bash
+uv sync
+source .venv/bin/activate
+```
