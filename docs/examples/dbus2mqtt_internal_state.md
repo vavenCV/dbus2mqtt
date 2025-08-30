@@ -5,8 +5,6 @@ hide:
 
 # dbus2mqtt internal state (WIP)
 
-## Introduction
-
 This will publish the dbus2mqtt's internal state to the `dbus2mqtt/state` MQTT topic every 5 seconds
 
 ## Setup activities
