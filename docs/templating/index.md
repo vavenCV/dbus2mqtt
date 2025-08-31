@@ -12,4 +12,3 @@ Templating is used in these areas of dbus2mqtt:
 
 * [subscriptions](../subscriptions.md)
 * [flow actions](../flows/flow_actions.md)
-* [flow triggers](../flows/flow_triggers.md)

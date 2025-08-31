@@ -27,6 +27,9 @@ exclude_docs: |
 theme:
   name: material
   language: en
+  logo: assets/logo-light-text.svg
+  favicon: assets/logo-dark-img.svg
+  custom_dir: docs/overrides
   features:
 
     # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
@@ -51,7 +54,7 @@ theme:
 
     # Enable navigation footer (next/previous buttons at the bottom of the page).
     # https://squidfunk.github.io/mkdocs-material/setup/setting-up-the-footer/#navigation
-    - navigation.footer
+    # - navigation.footer
 
   palette:
 
@@ -101,6 +104,9 @@ nav:
       - developer/debugging_dbus.md
 
 extra:
+  analytics:
+    provider: google
+    property: G-BRH1JXWE40
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jwnmulder

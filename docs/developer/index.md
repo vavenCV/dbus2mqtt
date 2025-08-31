@@ -13,6 +13,13 @@ Generic DBus specifications:
 uv run main.py --config config.yaml
 ```
 
+## Activate Python virtual env
+
+```bash
+uv sync
+source .venv/bin/activate
+```
+
 ## MQTT CLI examples
 
 Multiple MQTT client exist that can be used for testing, e.g.
@@ -20,7 +27,7 @@ Multiple MQTT client exist that can be used for testing, e.g.
 * [MQTT Explorer](https://mqtt-explorer.com/)
 * [github.com/RISE-Maritime/mqtt-cli](https://github.com/RISE-Maritime/mqtt-cli)
 
-### mqtt-cli example
+### Publishing MQTT messages with mqtt-cli
 
 ```bash
 source .env
