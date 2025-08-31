@@ -20,14 +20,14 @@ uv sync
 source .venv/bin/activate
 ```
 
-## MQTT CLI examples
+## Publishing and subcribing to MQTT messages
 
 Multiple MQTT client exist that can be used for testing, e.g.
 
 * [MQTT Explorer](https://mqtt-explorer.com/)
 * [github.com/RISE-Maritime/mqtt-cli](https://github.com/RISE-Maritime/mqtt-cli)
 
-### Publishing MQTT messages with mqtt-cli
+### Using mqtt-cli
 
 ```bash
 source .env
