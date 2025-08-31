@@ -20,7 +20,7 @@ uv sync
 source .venv/bin/activate
 ```
 
-## Publishing and subcribing to MQTT messages
+## Publishing and subscribing to MQTT messages
 
 Multiple MQTT client exist that can be used for testing, e.g.
 
