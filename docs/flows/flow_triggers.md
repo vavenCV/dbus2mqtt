@@ -88,9 +88,6 @@ Listens for MQTT messages on the configured topic. The message payload is expect
 | topic     | topic to subscribe to, e.g. 'dbus2mqtt/org.mpris.MediaPlayer2/flow-trigger' |
 | filter    | A templated string that must evaluate to a boolean result. When False, the flow is not triggered |
 
-!!! note
-    If `topic` overlaps with `subscription[].interfaces[].mqtt_command_topic` and the JSON payload structure follows `mqtt_command_topic` layout, a dbus call will be executed as well. Similar, warnings will be logged if a message does not match any flow or D-Bus method.
-
 When triggered, the following context parameters are available
 
 | name | type | description |
@@ -112,3 +109,6 @@ flows:
         msg: |
           Flow triggered by MQTT message, payload.action={{ payload.get('action') }}
 ```
+
+!!! note
+    If `topic` overlaps with `subscription[].interfaces[].mqtt_command_topic` and the JSON payload structure follows `mqtt_command_topic` layout, a dbus call will be executed as well. Similar, warnings will be logged if a message does not match any flow or D-Bus method.
