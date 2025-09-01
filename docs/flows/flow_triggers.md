@@ -81,7 +81,7 @@ When triggered, the following context parameters are available
   filter: "{{ payload.get('action') == 'Mute' }}"
 ```
 
-Listens for MQTT message on the configured topic. The message payload is expected to be JSON formatted
+Listens for MQTT messages on the configured topic. The message payload is expected to be JSON formatted
 
 | key | description  |
 |------|-------------|
@@ -89,7 +89,7 @@ Listens for MQTT message on the configured topic. The message payload is expecte
 | filter    | A templated string that must evaluate to a boolean result. When False, the flow is not triggered |
 
 !!! note
-    If `topic` overlaps with `subscription[].interfaces[].mqtt_command_topic` and the JSON payload structure follows `mqtt_command_topic` layout, a dbus call will be executed as well.
+    If `topic` overlaps with `subscription[].interfaces[].mqtt_command_topic` and the JSON payload structure follows `mqtt_command_topic` layout, a dbus call will be executed as well. Similar, warnings will be logged if a messaage does not match flows or valid D-Bus methods.
 
 When triggered, the following context parameters are available
 
