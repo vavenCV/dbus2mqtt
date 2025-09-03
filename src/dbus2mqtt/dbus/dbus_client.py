@@ -810,7 +810,7 @@ class DbusClient:
                                     error = None
                                     try:
                                         logger.info(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
-                                        await self.call_dbus_interface_method(interface, method.method, payload_method_args)
+                                        result = await self.call_dbus_interface_method(interface, method.method, payload_method_args)
                                         # Send response if configured
                                         await self._send_mqtt_response(
                                             interface_config, result, None, bus_name, path,
