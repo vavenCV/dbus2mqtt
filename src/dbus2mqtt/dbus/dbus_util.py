@@ -176,13 +176,16 @@ def _convert_and_wrap_in_variant(value: Any) -> Any:
             converted_value = _convert_value_to_dbus(v)
             signature = _get_dbus_signature(converted_value)
             converted_dict[key] = Variant(signature, converted_value)
-        return converted_dict
+
+        signature = _get_dbus_signature(value)
+        return Variant(signature, converted_dict)
     elif isinstance(value, list):
         # Convert list and potentially wrap in Variant
         converted_list = []
         for item in value:
             converted_list.append(_convert_and_wrap_in_variant(item))
-        return converted_list
+        signature = _get_dbus_signature(value)
+        return Variant(signature, converted_list)
     else:
         # Fallback
         return value
