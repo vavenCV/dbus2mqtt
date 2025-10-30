@@ -59,6 +59,7 @@ async def mqtt_processor_task(app_context: AppContext):
             asyncio.create_task(mqtt_client.mqtt_publish_queue_processor_task())
         )
     except asyncio.CancelledError:
+        logger.error("MQTT processor task cancelled, stopping MQTT client loop")
         mqtt_client.client.loop_stop()
 
 async def flow_processor_task(app_context: AppContext):

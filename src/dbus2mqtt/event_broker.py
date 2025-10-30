@@ -45,9 +45,9 @@ class EventBroker:
         )
 
     def on_mqtt_receive(self, msg: MqttMessage, hints: MqttReceiveHints):
-        # logger.debug("on_mqtt_receive")
+        logger.info(f"on_mqtt_receive: {msg}")
         self.mqtt_receive_queue.sync_q.put((msg, hints))
 
     async def publish_to_mqtt(self, msg: MqttMessage):
-        # logger.debug("publish_to_mqtt")
+        logger.info(f"publish_to_mqtt: {msg.topic}")
         await self.mqtt_publish_queue.async_q.put(msg)

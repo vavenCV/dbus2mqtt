@@ -156,7 +156,8 @@ class SubscriptionConfig:
 class DbusConfig:
     subscriptions: list[SubscriptionConfig]
     bus_type: Literal["SESSION", "SYSTEM"] = "SESSION"
-
+    timeout: float = 30.0
+    
     def is_bus_name_configured(self, bus_name: str) -> bool:
 
         for subscription in self.subscriptions:

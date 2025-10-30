@@ -1,3 +1,4 @@
+import asyncio
 import fnmatch
 import json
 import logging
@@ -56,6 +57,8 @@ class DbusClient:
         self._interfaces_added_match_rule = "interface='org.freedesktop.DBus.ObjectManager',type='signal',member='InterfacesAdded'"
         self._interfaces_removed_match_rule = "interface='org.freedesktop.DBus.ObjectManager',type='signal',member='InterfacesRemoved'"
 
+        self.mqtt_processing_timeout = app_context.config.dbus.timeout
+        
     async def connect(self):
 
         if not self.bus.connected:
@@ -679,17 +682,20 @@ class DbusClient:
 
         logger.info(f"set_dbus_interface_property: bus_name={interface.bus_name}, interface={interface.introspection.name}, property={property}, value={value}")
 
+    async def _process_mqtt_message(self, msg, hints):
+        try:
+            await self._on_mqtt_msg(msg, hints)
+        except Exception as e:
+            logger.warning(f"_process_mqtt_message: Exception {e}", exc_info=True)
+        finally:
+            self.event_broker.mqtt_receive_queue.async_q.task_done()
+                
     async def mqtt_receive_queue_processor_task(self):
         """Continuously processes messages from the async queue."""
         while True:
             msg, hints = await self.event_broker.mqtt_receive_queue.async_q.get()  # Wait for a message
-            try:
-                await self._on_mqtt_msg(msg, hints)
-            except Exception as e:
-                logger.warning(f"mqtt_receive_queue_processor_task: Exception: {e}", exc_info=True)
-            finally:
-                self.event_broker.mqtt_receive_queue.async_q.task_done()
-
+            asyncio.create_task(self._process_mqtt_message(msg, hints))
+    
     async def dbus_signal_queue_processor_task(self):
         """Continuously processes messages from the async queue."""
         while True:
@@ -806,19 +812,16 @@ class DbusClient:
                                 if method.method == payload_method:
                                     interface = proxy_object.get_interface(name=interface_config.interface)
                                     matched_method = True
-                                    result = None
-                                    error = None
                                     try:
                                         logger.info(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
-                                        result = await self.call_dbus_interface_method(interface, method.method, payload_method_args)
+                                        result = await asyncio.wait_for(self.call_dbus_interface_method(interface, method.method, payload_method_args), timeout=self.mqtt_processing_timeout)
                                         # Send response if configured
                                         await self._send_mqtt_response(
                                             interface_config, result, None, bus_name, path,
                                             method=method.method, args=payload_method_args
                                         )
-                                    except Exception as e:
-                                        error = e
-                                        logger.warning(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name} failed, exception={e}")
+                                    except Exception as error:
+                                        logger.warning(f"on_mqtt_msg: method={method.method}, args={payload_method_args}, bus_name={bus_name} failed, exception={error}")
                                         # Send error response if configured
                                         await self._send_mqtt_response(
                                             interface_config, None, error, bus_name, path,
@@ -833,17 +836,17 @@ class DbusClient:
 
                                     try:
                                         logger.info(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name}, path={path}, interface={interface_config.interface}")
-                                        await self.set_dbus_interface_property(interface, property.property, payload_value)
+                                        await asyncio.wait_for(self.set_dbus_interface_property(interface, property.property, payload_value), timeout=self.mqtt_processing_timeout)
                                         # Send property set response if configured
                                         await self._send_mqtt_response(
                                             interface_config, payload_value, None, bus_name, path,
                                             property=property.property, value=[payload_value]
                                         )
-                                    except Exception as e:
-                                        logger.warning(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name} failed, exception={e}")
+                                    except Exception as error:
+                                        logger.warning(f"on_mqtt_msg: property={property.property}, value={payload_value}, bus_name={bus_name} failed, exception={error}")
                                         # Send property set error response if configured
                                         await self._send_mqtt_response(
-                                            interface_config, None, e, bus_name, path,
+                                            interface_config, None, error, bus_name, path,
                                             property=property.property, value=[payload_value],
                                         )
 

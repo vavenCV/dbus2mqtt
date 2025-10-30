@@ -142,7 +142,7 @@ class MqttClient:
 
         try:
             json_payload = json.loads(payload) if payload else {}
-            logger.debug(f"on_message: msg.topic={msg.topic}, msg.payload={json.dumps(json_payload)}")
+            logger.info(f"on_message: msg.topic={msg.topic}, msg.payload={json.dumps(json_payload)}")
 
             # publish to flow trigger queue for any configured mqtt_message triggers
             flow_trigger_messages = self._trigger_flows(msg.topic, {
